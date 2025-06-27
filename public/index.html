@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stremio Groups - Shared Movie Catalogs</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 2rem 1rem;
+        }
+        .container { max-width: 800px; width: 100%; }
+        .header { text-align: center; margin-bottom: 2rem; color: white; }
+        .header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .header p { font-size: 1.1rem; opacity: 0.9; }
+        .card { background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 1.5rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #555; }
+        input[type="text"], input[type="password"] {
+            width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;
+        }
+        input:focus { outline: none; border-color: #667eea; }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-size: 1rem;
+            font-weight: 600; cursor: pointer; transition: all 0.2s;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        .result { margin-top: 1rem; padding: 1rem; border-radius: 8px; background: #f0fdf4; border-left: 4px solid #28a745; }
+        .error { border-left-color: #dc3545; background: #f8d7da; color: #721c24; }
+        .addon-url { font-family: monospace; background: #e9ecef; padding: 0.5rem; border-radius: 4px; word-break: break-all; margin: 0.5rem 0; }
+        .auth-section { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .content-section { display: none; }
+        .filter-btn-group { display: flex; gap: 1rem; margin-bottom: 1rem; }
+        .filter-btn { background: #f8f9fa; color: #495057; border: 2px solid #e0e0e0; padding: 0.5rem 1rem; }
+        .filter-btn:hover, .filter-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-color: #667eea; }
+        .content-item { display: flex; align-items: flex-start; padding: 1rem; border-bottom: 1px solid #eee; }
+        .content-item:last-child { border-bottom: none; }
+        .content-poster { width: 60px; height: 90px; object-fit: cover; border-radius: 4px; margin-right: 1rem; flex-shrink: 0; }
+        .content-info h4 { margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .content-type { background: #667eea; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; }
+        .content-type.series { background: #28a745; }
+        .preview-item { display: flex; align-items: center; gap: 1rem; }
+        .preview-poster { width: 80px; height: 120px; object-fit: cover; border-radius: 6px; }
+        .preview-info h5 { margin: 0 0 0.5rem 0; color: #333; }
+        .preview-info p { margin: 0.25rem 0; color: #666; font-size: 0.9rem; }
+        .type-badge { display: inline-block; background: #667eea; color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem; text-transform: uppercase; font-weight: bold; }
+        .type-badge.series { background: #28a745; }
+
+        /* New styles for Group ID display */
+        .group-id-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        .group-id-header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        .group-id-display {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            backdrop-filter: blur(10px);
+        }
+        .group-id-label {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        .group-id-value {
+            font-size: 3rem;
+            font-weight: 900;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 3px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .group-id-value:hover {
+            transform: scale(1.05);
+            text-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
+        .copy-notice {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+        .copied-feedback {
+            background: rgba(40, 167, 69, 0.9);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .copied-feedback.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .auth-section { grid-template-columns: 1fr; }
+            .group-id-value { font-size: 2.2rem; letter-spacing: 2px; }
+            .group-id-header h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Stremio Groups</h1>
+            <p>Create & join real-time shared movie and series lists.</p>
+        </div>
+
+        <div id="authSection" class="auth-section">
+            <div class="card">
+                <h2>Create New Group</h2>
+                <form id="createForm">
+                    <div class="form-group"><label for="groupName">Group Name</label><input type="text" id="groupName" placeholder="Family Movie Night" required></div>
+                    <div class="form-group"><label for="groupPassword">Password</label><input type="password" id="groupPassword" placeholder="Choose a password" required></div>
+                    <button type="submit">Create Group</button>
+                </form>
+                <div id="createResult"></div>
+            </div>
+            <div class="card">
+                <h2>Join Existing Group</h2>
+                <form id="joinForm">
+                    <div class="form-group"><label for="joinGroupId">Group ID</label><input type="text" id="joinGroupId" placeholder="Enter group ID" required></div>
+                    <div class="form-group"><label for="joinPassword">Password</label><input type="password" id="joinPassword" placeholder="Enter password" required></div>
+                    <button type="submit">Join Group</button>
+                </form>
+                <div id="joinResult"></div>
+            </div>
+        </div>
+
+        <div id="contentSection" class="content-section">
+            <!-- New prominent Group ID header -->
+            <div class="group-id-header">
+                <h1 id="groupTitle">Group: Loading...</h1>
+                <div class="group-id-display">
+                    <div class="group-id-label">Group ID</div>
+                    <div class="group-id-value" id="groupIdDisplay" title="Click to copy">--------</div>
+                    <div class="copy-notice">Click to copy to clipboard</div>
+                    <div class="copied-feedback" id="copiedFeedback">✓ Copied to clipboard!</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Stremio Addon</h2>
+                <p>Addon URL: <span id="addonUrlResult" class="addon-url"></span></p>
+                <p style="color: #666; font-size: 0.9rem; margin: 0.5rem 0 1rem 0;">Install the addon in Stremio to see the shared catalog and to add content directly from the Stremio app.</p>
+
+                <h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #555;">Find Movie/Series to Add</h3>
+                
+                <form id="addContentForm">
+                    <div class="form-group">
+                        <label for="imdbId">IMDB ID or URL</label>
+                        <input type="text" id="imdbId" placeholder="tt0111161 or https://www.imdb.com/title/tt0111161/" required>
+                    </div>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <button type="button" id="fetchInfoBtn">Fetch Info</button>
+                        <button type="submit" id="addBtn" style="display: none;">Add to Group</button>
+                    </div>
+                </form>
+                <div id="addContentResult" style="margin-top: 1rem;"></div>
+                <div id="contentPreview" style="display: none; margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea;"></div>
+            </div>
+
+            <div class="card">
+                <h3>Current Content in Group</h3>
+                <div class="filter-btn-group">
+                    <button data-filter="all" class="filter-btn active">All</button>
+                    <button data-filter="movie" class="filter-btn">Movies</button>
+                    <button data-filter="series" class="filter-btn">TV Series</button>
+                </div>
+                <div id="contentList"><p>Loading content...</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+        // --- STATE MANAGEMENT ---
+        let currentGroupId = null;
+        let currentGroupName = null;
+        let currentFilter = 'all';
+        let currentContentInfo = null;
+        let socket = null;
+
+        // --- DOM ELEMENTS ---
+        const authSection = document.getElementById('authSection');
+        const contentSection = document.getElementById('contentSection');
+        const groupTitle = document.getElementById('groupTitle');
+        const groupIdDisplay = document.getElementById('groupIdDisplay');
+        const addonUrlResult = document.getElementById('addonUrlResult');
+        const contentList = document.getElementById('contentList');
+        const createForm = document.getElementById('createForm');
+        const joinForm = document.getElementById('joinForm');
+        const addContentForm = document.getElementById('addContentForm');
+        const fetchInfoBtn = document.getElementById('fetchInfoBtn');
+        const addBtn = document.getElementById('addBtn');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const copiedFeedback = document.getElementById('copiedFeedback');
+
+        // --- UTILITY FUNCTIONS ---
+        const extractImdbId = (input) => {
+            const trimmed = input.trim();
+            if (trimmed.match(/^tt\d+$/)) return trimmed;
+            const urlMatch = trimmed.match(/(?:imdb\.com\/title\/)?(tt\d+)/);
+            return urlMatch ? urlMatch[1] : null;
+        };
+
+        const displayResult = (elementId, message, isError = false) => {
+            const el = document.getElementById(elementId);
+            el.innerHTML = `<div class="result ${isError ? 'error' : ''}">${message}</div>`;
+        };
+
+        const copyToClipboard = async (text) => {
+            try {
+                await navigator.clipboard.writeText(text);
+                copiedFeedback.classList.add('show');
+                setTimeout(() => {
+                    copiedFeedback.classList.remove('show');
+                }, 2000);
+            } catch (err) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                copiedFeedback.classList.add('show');
+                setTimeout(() => {
+                    copiedFeedback.classList.remove('show');
+                }, 2000);
+            }
+        };
+
+        // --- CORE LOGIC ---
+        const showContentSection = (groupId, groupName, addonUrl) => {
+            currentGroupId = groupId;
+            currentGroupName = groupName;
+
+            groupTitle.textContent = `Group: ${groupName}`;
+            groupIdDisplay.textContent = groupId;
+            addonUrlResult.textContent = addonUrl;
+            
+            authSection.style.display = 'none';
+            contentSection.style.display = 'block';
+
+            loadContent();
+            setupWebSocket();
+        };
+
+        const setupWebSocket = () => {
+            if (socket) socket.disconnect();
+            socket = io();
+
+            socket.on('connect', () => {
+                console.log('WebSocket connected!');
+                socket.emit('join-group-room', currentGroupId);
+            });
+
+            socket.on('new-content-added', (newItem) => {
+                console.log('Real-time update received:', newItem);
+                displayResult('addContentResult', `"${newItem.title}" was added to the group by someone!`, false);
+                // We can make this smarter by checking the current filter before reloading everything
+                loadContent(); 
+            });
+
+            socket.on('disconnect', () => {
+                console.log('WebSocket disconnected.');
+            });
+        };
+
+        const loadContent = async () => {
+            if (!currentGroupId) return;
+            contentList.innerHTML = '<p>Loading content...</p>';
+            try {
+                const url = `/api/groups/${currentGroupId}/content${currentFilter !== 'all' ? `?type=${currentFilter}` : ''}`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to fetch content.');
+                
+                const content = await response.json();
+                renderContent(content);
+            } catch (error) {
+                console.error('Error loading content:', error);
+                contentList.innerHTML = '<p class="error">Could not load content.</p>';
+            }
+        };
+
+        const renderContent = (content) => {
+            if (content.length === 0) {
+                contentList.innerHTML = '<p>No content has been added to this list yet.</p>';
+                return;
+            }
+            contentList.innerHTML = content.map(item => `
+                <div class="content-item" data-imdb-id="${item.imdb_id}">
+                    <img class="content-poster" src="${item.poster_url || 'https://via.placeholder.com/60x90.png?text=No+Poster'}" alt="Poster for ${item.title}">
+                    <div class="content-info">
+                        <h4>${item.title} <span class="content-type ${item.type}">${item.type}</span></h4>
+                        <p><strong>IMDB:</strong> ${item.imdb_id}</p>
+                        <p><strong>Added:</strong> ${new Date(item.added_at).toLocaleDateString()}</p>
+                        ${item.genres ? `<p><strong>Genres:</strong> ${item.genres.replace(/,/g, ', ')}</p>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        };
+        
+        const renderPreview = (info) => {
+            const previewContainer = document.getElementById('contentPreview');
+            previewContainer.innerHTML = `
+                <div class="preview-item">
+                    <img src="${info.poster || 'https://via.placeholder.com/80x120.png?text=N/A'}" alt="Poster" class="preview-poster">
+                    <div class="preview-info">
+                        <h5>${info.title} (${info.year})</h5>
+                        <p><span class="type-badge ${info.type}">${info.type}</span></p>
+                        ${info.genres ? `<p><strong>Genres:</strong> ${info.genres}</p>` : ''}
+                        ${info.plot ? `<p><strong>Plot:</strong> ${info.plot}</p>` : ''}
+                    </div>
+                </div>`;
+            previewContainer.style.display = 'block';
+        };
+
+        // --- EVENT LISTENERS ---
+        
+        // Group ID click to copy
+        groupIdDisplay.addEventListener('click', () => {
+            if (currentGroupId) {
+                copyToClipboard(currentGroupId);
+            }
+        });
+
+        createForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('groupName').value;
+            const password = document.getElementById('groupPassword').value;
+            
+            try {
+                const response = await fetch('/api/groups', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, password })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error);
+
+                showContentSection(data.groupId, data.name, data.addonUrl);
+            } catch (error) {
+                displayResult('createResult', `Error: ${error.message}`, true);
+            }
+        });
+
+        joinForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const groupId = document.getElementById('joinGroupId').value;
+            const password = document.getElementById('joinPassword').value;
+
+            try {
+                const response = await fetch(`/api/groups/${groupId}/join`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error);
+                
+                showContentSection(data.groupId, data.name, data.addonUrl);
+            } catch (error) {
+                displayResult('joinResult', `Error: ${error.message}`, true);
+            }
+        });
+
+        fetchInfoBtn.addEventListener('click', async () => {
+            const input = document.getElementById('imdbId').value;
+            const imdbId = extractImdbId(input);
+            if (!imdbId) {
+                displayResult('addContentResult', 'Invalid IMDB ID format. Please use format like tt0111161.', true);
+                return;
+            }
+
+            fetchInfoBtn.disabled = true;
+            fetchInfoBtn.textContent = 'Fetching...';
+            addBtn.style.display = 'none';
+            document.getElementById('contentPreview').style.display = 'none';
+
+            try {
+                const response = await fetch(`/api/content/info/${imdbId}`);
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error);
+                
+                currentContentInfo = { imdbId, ...data };
+                renderPreview(data);
+                addBtn.style.display = 'inline-block';
+                displayResult('addContentResult', ''); // Clear previous results
+            } catch (error) {
+                displayResult('addContentResult', `Error: ${error.message}`, true);
+            } finally {
+                fetchInfoBtn.disabled = false;
+                fetchInfoBtn.textContent = 'Fetch Info';
+            }
+        });
+
+        addContentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentGroupId || !currentContentInfo) return;
+
+            addBtn.disabled = true;
+            addBtn.textContent = 'Adding...';
+
+            try {
+                const response = await fetch(`/api/groups/${currentGroupId}/content`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ imdbId: currentContentInfo.imdbId })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error);
+                
+                displayResult('addContentResult', data.message, false);
+                loadContent(); // Manually reload for immediate feedback
+
+                // Reset form
+                addContentForm.reset();
+                document.getElementById('contentPreview').style.display = 'none';
+                addBtn.style.display = 'none';
+                currentContentInfo = null;
+
+            } catch (error) {
+                displayResult('addContentResult', `Error: ${error.message}`, true);
+            } finally {
+                addBtn.disabled = false;
+                addBtn.textContent = 'Add to Group';
+            }
+        });
+
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                filterButtons.forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentFilter = e.target.dataset.filter;
+                loadContent();
+            });
+        });
+    </script>
+</body>
+</html>
