@@ -511,8 +511,12 @@ console.log('Health check endpoint configured at /health');
 // --- SERVER START & SHUTDOWN ---
 async function startServer() {
   try {
-    // Give the database a moment to initialize
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log('Waiting for database initialization...');
+    
+    // Wait for database to be ready
+    await db.waitForReady();
+    
+    console.log('Database is ready, starting HTTP server...');
     
     server.listen(port, '0.0.0.0', () => {
       console.log(`🚀 Stremio Groups server running on port ${port}`);
@@ -525,6 +529,7 @@ async function startServer() {
       }
       
       console.log(`💚 Health check: http://localhost:${port}/health`);
+      console.log('=== SERVER READY TO ACCEPT REQUESTS ===');
     });
   } catch (error) {
     console.error('Failed to start server:', error);

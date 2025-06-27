@@ -3,48 +3,169 @@ const path = require('path');
 const fs = require('fs');
 
 class Database {
-  cconstructor() {
-  console.log('=== DATABASE INITIALIZATION START ===');
-  
-  // Railway-compatible database path
-  // In production, Railway provides persistent storage in the app directory
-  const dbDir = process.env.RAILWAY_VOLUME_MOUNT_PATH 
-    ? path.join(process.env.RAILWAY_VOLUME_MOUNT_PATH, 'db')
-    : path.join(__dirname, '..', 'db');
+  constructor() {
+    console.log('=== DATABASE INITIALIZATION START ===');
+    console.log('Platform:', process.platform);
+    console.log('Current working directory:', process.cwd());
+    console.log('__dirname:', __dirname);
     
-  console.log('Environment check:');
-  console.log('- NODE_ENV:', process.env.NODE_ENV || 'development');
-  console.log('- RAILWAY_VOLUME_MOUNT_PATH:', process.env.RAILWAY_VOLUME_MOUNT_PATH || 'not set');
-  console.log('- Database directory path:', dbDir);
-  
-  if (!fs.existsSync(dbDir)) {
-    console.log('Creating database directory...');
-    fs.mkdirSync(dbDir, { recursive: true });
-  } else {
-    console.log('Database directory already exists');
-  }
-  
-  const dbPath = path.join(dbDir, 'data.db');
-  console.log('Database file path:', dbPath);
-  console.log('Database file exists:', fs.existsSync(dbPath));
-  
-  this.db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-      console.error('Error opening database:', err);
+    // Initialize as null first
+    this.db = null;
+    this.isReady = false;
+    
+    // Railway-specific database path logic
+    let dbDir;
+    
+    if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT) {
+      // In Railway, use the app directory for persistence
+      dbDir = path.join(process.cwd(), 'data');
+      console.log('Railway environment detected, using app directory for database');
     } else {
-      console.log('Connected to SQLite database successfully');
-      // Enable Foreign Key enforcement for data integrity
-      this.db.run('PRAGMA foreign_keys = ON;', (pragmaErr) => {
-        if (pragmaErr) console.error("Failed to enable foreign keys:", pragmaErr);
-        else console.log("Foreign key enforcement is on.");
-      });
-      this.initTables();
+      // Local development
+      dbDir = path.join(__dirname, '..', 'db');
+      console.log('Local environment detected');
     }
-  });
-}
+    
+    console.log('Environment variables:');
+    console.log('- NODE_ENV:', process.env.NODE_ENV || 'not set');
+    console.log('- RAILWAY_ENVIRONMENT:', process.env.RAILWAY_ENVIRONMENT || 'not set');
+    console.log('- PWD:', process.env.PWD || 'not set');
+    console.log('- Database directory path:', dbDir);
+    
+    // Create database directory with better error handling
+    try {
+      if (!fs.existsSync(dbDir)) {
+        console.log('Creating database directory...');
+        fs.mkdirSync(dbDir, { recursive: true });
+        console.log('Database directory created successfully');
+      } else {
+        console.log('Database directory already exists');
+      }
+      
+      // Test write permissions
+      const testFile = path.join(dbDir, 'write-test.tmp');
+      fs.writeFileSync(testFile, 'test');
+      fs.unlinkSync(testFile);
+      console.log('Database directory is writable');
+      
+    } catch (error) {
+      console.error('Error with database directory:', error);
+      // Fallback to temp directory if main directory fails
+      dbDir = '/tmp';
+      console.log('Falling back to /tmp directory');
+    }
+    
+    const dbPath = path.join(dbDir, 'data.db');
+    console.log('Final database file path:', dbPath);
+    
+    // Check if database file exists and is readable
+    if (fs.existsSync(dbPath)) {
+      try {
+        const stats = fs.statSync(dbPath);
+        console.log('Database file exists, size:', stats.size, 'bytes');
+      } catch (error) {
+        console.error('Error reading database file stats:', error);
+      }
+    } else {
+      console.log('Database file does not exist, will be created');
+    }
+    
+    // Create the database connection with Railway-specific options
+    console.log('Creating SQLite database connection...');
+    this.db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
+      if (err) {
+        console.error('Error opening database:', err);
+        console.error('Error code:', err.code);
+        console.error('Error errno:', err.errno);
+        this.isReady = false;
+        
+        // Try alternative path if first attempt fails
+        if (!err.message.includes('/tmp')) {
+          console.log('Retrying with /tmp directory...');
+          this.retryWithTempDir();
+        }
+      } else {
+        console.log('Connected to SQLite database successfully');
+        console.log('Database connection object created');
+        
+        // Test the connection with a simple query
+        this.db.get("SELECT sqlite_version() as version", (testErr, row) => {
+          if (testErr) {
+            console.error('Database connection test failed:', testErr);
+            this.isReady = false;
+          } else {
+            console.log('SQLite version:', row.version);
+            console.log('Database connection test successful');
+            
+            // Enable Foreign Key enforcement
+            this.db.run('PRAGMA foreign_keys = ON;', (pragmaErr) => {
+              if (pragmaErr) {
+                console.error("Failed to enable foreign keys:", pragmaErr);
+                this.isReady = false;
+              } else {
+                console.log("Foreign key enforcement is on.");
+                this.initTables();
+              }
+            });
+          }
+        });
+      }
+    });
+  }
+
+  // Retry with temp directory if initial path fails
+  retryWithTempDir() {
+    console.log('=== RETRYING DATABASE WITH /tmp DIRECTORY ===');
+    const tempDbPath = '/tmp/data.db';
+    
+    this.db = new sqlite3.Database(tempDbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
+      if (err) {
+        console.error('Failed to create database even in /tmp:', err);
+        this.isReady = false;
+      } else {
+        console.log('Successfully created database in /tmp directory');
+        
+        this.db.run('PRAGMA foreign_keys = ON;', (pragmaErr) => {
+          if (pragmaErr) {
+            console.error("Failed to enable foreign keys:", pragmaErr);
+            this.isReady = false;
+          } else {
+            console.log("Foreign key enforcement is on.");
+            this.initTables();
+          }
+        });
+      }
+    });
+  }
+
+  // Add a method to wait for database readiness with longer timeout for Railway
+  async waitForReady(timeoutMs = 30000) { // Increased timeout for Railway
+    console.log('Waiting for database to be ready...');
+    const startTime = Date.now();
+    
+    while (!this.isReady && (Date.now() - startTime) < timeoutMs) {
+      await new Promise(resolve => setTimeout(resolve, 200)); // Check every 200ms
+    }
+    
+    if (!this.isReady) {
+      console.error('Database failed to initialize within timeout period');
+      console.error('Current state - db exists:', !!this.db, 'isReady:', this.isReady);
+      throw new Error('Database failed to initialize within timeout period');
+    }
+    
+    console.log('Database is ready!');
+    return true;
+  }
 
   initTables() {
     console.log('=== INITIALIZING TABLES ===');
+    
+    if (!this.db) {
+      console.error('Cannot initialize tables - database connection is null');
+      this.isReady = false;
+      return;
+    }
+    
     const groupsTable = `
       CREATE TABLE IF NOT EXISTS groups (
         id TEXT PRIMARY KEY,
@@ -70,29 +191,54 @@ class Database {
       )
     `;
 
+    let tablesCreated = 0;
+    const totalTables = 2;
+
     this.db.run(groupsTable, (err) => {
-      if (err) console.error('Error creating groups table:', err);
-      else console.log('Groups table created/verified successfully');
+      if (err) {
+        console.error('Error creating groups table:', err);
+        this.isReady = false;
+      } else {
+        console.log('Groups table created/verified successfully');
+        tablesCreated++;
+        if (tablesCreated === totalTables) {
+          this.isReady = true;
+          console.log('=== DATABASE INITIALIZATION COMPLETE ===');
+        }
+      }
     });
     
     this.db.run(contentTable, (err) => {
-      if (err) console.error('Error creating content table:', err);
-      else console.log('Content table created/verified successfully');
+      if (err) {
+        console.error('Error creating content table:', err);
+        this.isReady = false;
+      } else {
+        console.log('Content table created/verified successfully');
+        tablesCreated++;
+        if (tablesCreated === totalTables) {
+          this.isReady = true;
+          console.log('=== DATABASE INITIALIZATION COMPLETE ===');
+        }
+      }
     });
   }
 
-  // --- Group operations ---
-  
-  /**
-   * Creates a new group in the database.
-   * @param {string} id The unique ID for the group.
-   * @param {string} name The name of the group.
-   * @param {string} passwordHash The hashed password for the group.
-   * @returns {Promise<number>} A promise that resolves with the lastID of the inserted row.
-   */
+  // Add a check method for all database operations
+  checkConnection() {
+    if (!this.db) {
+      throw new Error('Database connection is not initialized');
+    }
+    if (!this.isReady) {
+      throw new Error('Database is not ready yet');
+    }
+  }
+
+  // Rest of your methods remain the same...
   createGroup(id, name, passwordHash) {
     console.log('=== DATABASE createGroup START ===');
     console.log('Parameters:', { id, name, passwordHashLength: passwordHash ? passwordHash.length : 'undefined' });
+    
+    this.checkConnection();
     
     return new Promise((resolve, reject) => {
       const sql = 'INSERT INTO groups (id, name, password_hash) VALUES (?, ?, ?)';
@@ -103,11 +249,6 @@ class Database {
         console.log('=== db.run callback executed ===');
         if (err) {
           console.error('Database error in createGroup:', err);
-          console.error('Error details:', {
-            message: err.message,
-            code: err.code,
-            errno: err.errno
-          });
           reject(err);
         } else {
           console.log('Database insertion successful!');
@@ -115,32 +256,22 @@ class Database {
           console.log('this.changes:', this.changes);
           resolve(this.lastID);
         }
-        console.log('=== db.run callback finished ===');
       });
-      
-      console.log('db.run called, waiting for callback...');
     });
   }
 
   getGroup(id) {
-    console.log('=== DATABASE getGroup START ===');
-    console.log('Fetching group with id:', id);
-    
+    this.checkConnection();
     return new Promise((resolve, reject) => {
       this.db.get('SELECT * FROM groups WHERE id = ?', [id], (err, row) => {
-        console.log('=== getGroup callback executed ===');
-        if (err) {
-          console.error('Error in getGroup:', err);
-          reject(err);
-        } else {
-          console.log('getGroup result:', row);
-          resolve(row);
-        }
+        if (err) reject(err);
+        else resolve(row);
       });
     });
   }
 
   updateGroupCatalogSettings(id, settings) {
+    this.checkConnection();
     return new Promise((resolve, reject) => {
       const sql = 'UPDATE groups SET catalog_settings = ? WHERE id = ?';
       this.db.run(sql, JSON.stringify(settings), id, function(err) {
@@ -150,30 +281,19 @@ class Database {
     });
   }
 
-  // --- Content operations ---
-  
   addContent(groupId, imdbId, title, type, posterUrl, genres) {
-    console.log('=== DATABASE addContent START ===');
-    console.log('Parameters:', { groupId, imdbId, title, type, posterUrl, genres });
-    
+    this.checkConnection();
     return new Promise((resolve, reject) => {
-      const sql = `
-        INSERT INTO content (group_id, imdb_id, title, type, poster_url, genres) 
-        VALUES (?, ?, ?, ?, ?, ?)
-      `;
+      const sql = `INSERT INTO content (group_id, imdb_id, title, type, poster_url, genres) VALUES (?, ?, ?, ?, ?, ?)`;
       this.db.run(sql, groupId, imdbId, title, type, posterUrl, genres, function(err) {
-        if (err) {
-          console.error('Database error in addContent:', err);
-          reject(err);
-        } else {
-          console.log('Content added successfully, lastID:', this.lastID);
-          resolve(this.lastID);
-        }
+        if (err) reject(err);
+        else resolve(this.lastID);
       });
     });
   }
 
   getContentByGroup(groupId, type = null) {
+    this.checkConnection();
     return new Promise((resolve, reject) => {
       let query = 'SELECT * FROM content WHERE group_id = ?';
       const params = [groupId];
@@ -193,6 +313,7 @@ class Database {
   }
 
   getContentByImdbId(groupId, imdbId) {
+    this.checkConnection();
     return new Promise((resolve, reject) => {
       const query = 'SELECT * FROM content WHERE group_id = ? AND imdb_id = ?';
       this.db.get(query, groupId, imdbId, (err, row) => {
@@ -204,15 +325,19 @@ class Database {
 
   close() {
     return new Promise((resolve, reject) => {
-      this.db.close((err) => {
-        if (err) {
-          console.error('Error closing database:', err);
-          reject(err);
-        } else {
-          console.log('Database connection closed');
-          resolve();
-        }
-      });
+      if (this.db) {
+        this.db.close((err) => {
+          if (err) {
+            console.error('Error closing database:', err);
+            reject(err);
+          } else {
+            console.log('Database connection closed');
+            resolve();
+          }
+        });
+      } else {
+        resolve();
+      }
     });
   }
 }
