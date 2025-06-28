@@ -530,34 +530,8 @@ app.get('/api/groups/:groupId/add-from-stremio/:imdbId', async (req, res) => {
   console.log('=== ADD FROM STREMIO REQUEST ===');
   console.log('GroupId:', req.params.groupId);
   console.log('ImdbId:', req.params.imdbId);
+  console.log('Headers:', req.headers);
   console.log('User-Agent:', req.get('User-Agent'));
-  console.log('Accept header:', req.get('Accept'));
-  console.log('Range header:', req.get('Range'));
-  console.log('Sec-Fetch-Dest:', req.get('Sec-Fetch-Dest'));
-  
-  // More specific video request detection
-  // Only treat as video request if it has Range header (byte-range requests)
-  // OR if it explicitly requests video content types with range
-  const hasRangeHeader = !!req.get('Range');
-  const isExplicitVideoRequest = req.get('Sec-Fetch-Dest') === 'video';
-  const acceptsVideoOnly = req.get('Accept')?.startsWith('video/') && !req.get('Accept')?.includes('*/*');
-  
-  const isVideoRequest = hasRangeHeader || isExplicitVideoRequest || acceptsVideoOnly;
-  
-  console.log('Video detection analysis:');
-  console.log('- Has Range header:', hasRangeHeader);
-  console.log('- Explicit video request:', isExplicitVideoRequest);
-  console.log('- Accepts video only:', acceptsVideoOnly);
-  console.log('- Final decision - is video request:', isVideoRequest);
-  
-  if (isVideoRequest) {
-    console.log('Video request detected - Stremio is trying to play the stream');
-    // Return a proper "not a video" response
-    res.status(404).type('text/plain').send('This is not a video stream - content addition endpoint');
-    return;
-  }
-  
-  console.log('Legitimate add request detected - proceeding with content addition');
   
   try {
     const { groupId, imdbId } = req.params;
@@ -565,15 +539,14 @@ app.get('/api/groups/:groupId/add-from-stremio/:imdbId', async (req, res) => {
     
     console.log('Add content result:', result);
     
-    // Return a simple text response
+    // Stremio can display simple HTML feedback pages
     if (result.isDuplicate) {
-      res.status(200).type('text/plain').send(`Already in list: ${result.message}`);
-    } else {
-      res.status(200).type('text/plain').send(`Added successfully: ${result.message}`);
+      return res.status(200).send(`<h1>Already in List</h1><p><b>${result.message}</b></p>`);
     }
+    res.status(200).send(`<h1>Success!</h1><p><b>${result.message}</b></p>`);
   } catch (error) {
     console.error('Error adding content from Stremio:', error);
-    res.status(500).type('text/plain').send(`Error: ${error.message}`);
+    res.status(500).send(`<h1>Error</h1><p>Failed to add content. ${error.message}</p>`);
   }
 });
 
