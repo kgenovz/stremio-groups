@@ -42,12 +42,36 @@
         .filter-btn-group { display: flex; gap: 1rem; margin-bottom: 1rem; }
         .filter-btn { background: #f8f9fa; color: #495057; border: 2px solid #e0e0e0; padding: 0.5rem 1rem; }
         .filter-btn:hover, .filter-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-color: #667eea; }
-        .content-item { display: flex; align-items: flex-start; padding: 1rem; border-bottom: 1px solid #eee; }
+        .content-item { display: flex; align-items: flex-start; padding: 1rem; border-bottom: 1px solid #eee; position: relative; }
         .content-item:last-child { border-bottom: none; }
+        .content-item:hover { background: #f8f9fa; }
         .content-poster { width: 60px; height: 90px; object-fit: cover; border-radius: 4px; margin-right: 1rem; flex-shrink: 0; }
+        .content-info { flex: 1; }
         .content-info h4 { margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
         .content-type { background: #667eea; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; }
         .content-type.series { background: #28a745; }
+        .delete-btn { 
+            background: #dc3545; 
+            color: white; 
+            border: none; 
+            padding: 0.5rem; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 0.8rem; 
+            margin-left: 1rem;
+            align-self: flex-start;
+            transition: all 0.2s;
+            min-width: 70px;
+        }
+        .delete-btn:hover { 
+            background: #c82333; 
+            transform: translateY(-1px);
+        }
+        .delete-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
         .preview-item { display: flex; align-items: center; gap: 1rem; }
         .preview-poster { width: 80px; height: 120px; object-fit: cover; border-radius: 6px; }
         .preview-info h5 { margin: 0 0 0.5rem 0; color: #333; }
@@ -291,6 +315,12 @@
                 loadContent(); 
             });
 
+            socket.on('content-deleted', (deletedItem) => {
+                console.log('Real-time deletion received:', deletedItem);
+                displayResult('addContentResult', `"${deletedItem.title}" was removed from the group by someone!`, false);
+                loadContent(); // Reload the content list
+            });
+
             socket.on('disconnect', () => {
                 console.log('WebSocket disconnected.');
             });
@@ -318,7 +348,7 @@
                 return;
             }
             contentList.innerHTML = content.map(item => `
-                <div class="content-item" data-imdb-id="${item.imdb_id}">
+                <div class="content-item" data-imdb-id="${item.imdb_id}" data-content-id="${item.id}">
                     <img class="content-poster" src="${item.poster_url || 'https://via.placeholder.com/60x90.png?text=No+Poster'}" alt="Poster for ${item.title}">
                     <div class="content-info">
                         <h4>${item.title} <span class="content-type ${item.type}">${item.type}</span></h4>
@@ -326,6 +356,9 @@
                         <p><strong>Added:</strong> ${new Date(item.added_at).toLocaleDateString()}</p>
                         ${item.genres ? `<p><strong>Genres:</strong> ${item.genres.replace(/,/g, ', ')}</p>` : ''}
                     </div>
+                    <button class="delete-btn" onclick="deleteContent(${item.id}, '${item.title}')">
+                        🗑️ Delete
+                    </button>
                 </div>
             `).join('');
         };
@@ -344,6 +377,44 @@
                 </div>`;
             previewContainer.style.display = 'block';
         };
+
+        // Delete content function
+        const deleteContent = async (contentId, title) => {
+            if (!confirm(`Are you sure you want to remove "${title}" from the group?`)) {
+                return;
+            }
+
+            const deleteBtn = document.querySelector(`button[onclick="deleteContent(${contentId}, '${title}')"]`);
+            if (deleteBtn) {
+                deleteBtn.disabled = true;
+                deleteBtn.textContent = 'Deleting...';
+            }
+
+            try {
+                const response = await fetch(`/api/groups/${currentGroupId}/content/${contentId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error);
+
+                displayResult('addContentResult', data.message, false);
+                loadContent(); // Reload the content list
+
+            } catch (error) {
+                console.error('Error deleting content:', error);
+                displayResult('addContentResult', `Error: ${error.message}`, true);
+                
+                // Re-enable button on error
+                if (deleteBtn) {
+                    deleteBtn.disabled = false;
+                    deleteBtn.textContent = '🗑️ Delete';
+                }
+            }
+        };
+
+        // Make deleteContent globally available
+        window.deleteContent = deleteContent;
 
         // --- EVENT LISTENERS ---
         

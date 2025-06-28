@@ -323,6 +323,57 @@ class Database {
     });
   }
 
+getContentById(contentId, groupId) {
+  console.log('=== DATABASE getContentById START ===');
+  console.log('ContentId:', contentId, 'GroupId:', groupId);
+  
+  this.checkConnection();
+  
+  return new Promise((resolve, reject) => {
+    const query = 'SELECT * FROM content WHERE id = ? AND group_id = ?';
+    console.log('SQL Query:', query);
+    
+    this.db.get(query, contentId, groupId, (err, row) => {
+      console.log('=== getContentById callback executed ===');
+      if (err) {
+        console.error('Database error in getContentById:', err);
+        reject(err);
+      } else {
+        console.log('getContentById result:', row ? 'Found' : 'Not found');
+        if (row) {
+          console.log('Content details:', { title: row.title, type: row.type });
+        }
+        resolve(row);
+      }
+    });
+  });
+}
+
+
+deleteContent(contentId, groupId) {
+  console.log('=== DATABASE deleteContent START ===');
+  console.log('ContentId:', contentId, 'GroupId:', groupId);
+  
+  this.checkConnection();
+  
+  return new Promise((resolve, reject) => {
+    const query = 'DELETE FROM content WHERE id = ? AND group_id = ?';
+    console.log('SQL Query:', query);
+    
+    this.db.run(query, contentId, groupId, function(err) {
+      console.log('=== deleteContent callback executed ===');
+      if (err) {
+        console.error('Database error in deleteContent:', err);
+        reject(err);
+      } else {
+        console.log('Delete operation completed');
+        console.log('Rows affected:', this.changes);
+        resolve(this.changes); // Returns number of deleted rows
+      }
+    });
+  });
+}
+
   close() {
     return new Promise((resolve, reject) => {
       if (this.db) {

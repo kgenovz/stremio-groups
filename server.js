@@ -108,10 +108,30 @@ async function addContentToGroup(groupId, imdbId) {
         const info = await fetchOMDBInfo(imdbId);
         console.log('OMDB info fetched:', { title: info.title, type: info.type });
         
-        // Add to database
+        // Add to database with try-catch for constraint errors
         console.log('Adding to database...');
-        await db.addContent(groupId, imdbId, info.title, info.type, info.poster, info.genres);
-        console.log('Successfully added to database');
+        try {
+            await db.addContent(groupId, imdbId, info.title, info.type, info.poster, info.genres);
+            console.log('Successfully added to database');
+        } catch (dbError) {
+            // Handle SQLite constraint errors (duplicates that slipped through)
+            if (dbError.code === 'SQLITE_CONSTRAINT' && dbError.message.includes('UNIQUE constraint failed')) {
+                console.log('Caught duplicate insertion at database level - race condition detected');
+                
+                // Get the existing content info for a proper response
+                const existingContent = await db.getContentByImdbId(groupId, imdbId);
+                const title = existingContent ? existingContent.title : info.title;
+                
+                return { 
+                    success: false, 
+                    message: `"${title}" is already in the group list.`, 
+                    info: null, 
+                    isDuplicate: true 
+                };
+            }
+            // Re-throw other database errors
+            throw dbError;
+        }
         
         // Broadcast the update to the specific group's room
         console.log('Broadcasting to WebSocket room:', groupId);
@@ -298,50 +318,113 @@ app.get('/api/content/info/:imdbId', async (req, res) => {
   }
 });
 
+// Delete content from a group
+app.delete('/api/groups/:groupId/content/:contentId', async (req, res) => {
+  console.log('=== DELETE CONTENT REQUEST START ===');
+  console.log('GroupId:', req.params.groupId);
+  console.log('ContentId:', req.params.contentId);
+  
+  try {
+    const { groupId, contentId } = req.params;
+    
+    // Verify the group exists
+    const group = await db.getGroup(groupId);
+    if (!group) {
+      console.log('Group not found');
+      return res.status(404).json({ error: 'Group not found' });
+    }
+    
+    // Get the content info before deleting (for response message)
+    const content = await db.getContentById(contentId, groupId);
+    if (!content) {
+      console.log('Content not found or does not belong to this group');
+      return res.status(404).json({ error: 'Content not found' });
+    }
+    
+    console.log('Deleting content:', { title: content.title, type: content.type });
+    
+    // Delete the content
+    const deletedCount = await db.deleteContent(contentId, groupId);
+    
+    if (deletedCount === 0) {
+      console.log('No content was deleted');
+      return res.status(404).json({ error: 'Content not found or already deleted' });
+    }
+    
+    console.log('Content deleted successfully');
+    
+    // Broadcast the deletion to the specific group's room
+    io.to(groupId).emit('content-deleted', {
+      contentId: parseInt(contentId),
+      title: content.title,
+      type: content.type
+    });
+    
+    res.json({
+      success: true,
+      message: `"${content.title}" was removed from the group.`,
+      deletedContent: {
+        id: content.id,
+        title: content.title,
+        type: content.type
+      }
+    });
+    
+    console.log('=== DELETE CONTENT REQUEST SUCCESS ===');
+  } catch (error) {
+    console.error('=== DELETE CONTENT REQUEST FAILED ===');
+    console.error('Error deleting content:', error);
+    res.status(500).json({ error: 'Failed to delete content' });
+  }
+});
+
 
 // --- STREMIO ADDON ROUTES ---
 
 // Stremio addon manifest
+// Replace your manifest route with this simplified version
+
 app.get('/:groupId/manifest.json', async (req, res) => {
+  console.log('=== MANIFEST REQUEST START ===');
+  console.log('GroupId from URL:', req.params.groupId);
+  
   try {
     const { groupId } = req.params;
     const group = await db.getGroup(groupId);
-    if (!group) return res.status(404).send('Addon not found.');
-
-    // Check what content types exist in the group
-    const allContent = await db.getContentByGroup(groupId);
-    const hasMovies = allContent.some(item => item.type === 'movie');
-    const hasSeries = allContent.some(item => item.type === 'series');
     
-    // Build catalogs array based on what content actually exists
-    const catalogs = [];
-    
-    if (hasMovies) {
-      catalogs.push({ id: 'shared-movies', type: 'movie', name: 'Shared Movies' });
-    }
-    
-    if (hasSeries) {
-      catalogs.push({ id: 'shared-series', type: 'series', name: 'Shared Series' });
+    if (!group) {
+      console.log('Group not found, returning 404');
+      return res.status(404).json({ error: 'Addon not found.' });
     }
 
-    // If no content exists yet, show both catalogs so users can add content
-    if (catalogs.length === 0) {
-      catalogs.push({ id: 'shared-movies', type: 'movie', name: 'Shared Movies' });
-      catalogs.push({ id: 'shared-series', type: 'series', name: 'Shared Series' });
-    }
+    console.log('Group found:', group.name);
 
-    res.setHeader('Content-Type', 'application/json');
-    res.json({
+    // ALWAYS show both catalogs - no dynamic behavior!
+    const catalogs = [
+      { id: 'shared-movies', type: 'movie', name: `${group.name} - Shared List` },
+      { id: 'shared-series', type: 'series', name: `${group.name} - Shared List` }
+    ];
+
+    const manifest = {
       id: `stremio.groups.${groupId}`,
-      version: '1.3.0', // Incremented version for simplified catalogs
+      version: '1.4.0', // Static version since catalogs never change
       name: `${group.name} - Group List`,
       description: `Shared movie and series catalog for the group: ${group.name}`,
       logo: `${req.protocol}://${req.get('host')}/logo.png`,
       resources: ['catalog', 'stream'],
       types: ['movie', 'series'],
       catalogs: catalogs
-    });
+    };
+
+    console.log('Generated static manifest with both catalogs always visible');
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.json(manifest);
+    
+    console.log('=== MANIFEST REQUEST SUCCESS ===');
   } catch (error) {
+    console.error('=== MANIFEST REQUEST ERROR ===');
     console.error('Error serving manifest:', error);
     res.status(500).json({ error: 'Failed to serve manifest' });
   }
@@ -411,23 +494,28 @@ app.get('/:groupId/stream/:type/:id.json', async (req, res) => {
         streams: [{
           name: `[${group.name}]`,
           title: `✅ Already in group: "${existing.title}"`,
-          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', // Dummy URL since it's already added
+          // Return a special URL that doesn't get called
+          url: 'https://example.com/already-added.mp4',
+          behaviorHints: {
+            notWebReady: true,
+            bingeGroup: 'already-added'
+          }
         }]
       });
     }
 
-    // The URL that will actually add the content
-    const addActionUrl = `${req.protocol}://${req.get('host')}/api/groups/${groupId}/add-from-stremio/${imdbId}`;
-    
-    console.log('Providing add action URL:', addActionUrl);
+    // For new content, provide the add action
+    console.log('Providing add action for new content');
     
     res.json({
       streams: [{
         name: `[${group.name}]`,
         title: '✨ Add to Group List',
-        url: addActionUrl,
+        // Use a special protocol or make it clear it's not a video
+        url: `${req.protocol}://${req.get('host')}/api/groups/${groupId}/add-from-stremio/${imdbId}`,
         behaviorHints: {
-          notWebReady: true
+          notWebReady: true,
+          bingeGroup: 'add-to-list'
         }
       }]
     });
@@ -442,8 +530,20 @@ app.get('/api/groups/:groupId/add-from-stremio/:imdbId', async (req, res) => {
   console.log('=== ADD FROM STREMIO REQUEST ===');
   console.log('GroupId:', req.params.groupId);
   console.log('ImdbId:', req.params.imdbId);
-  console.log('Headers:', req.headers);
   console.log('User-Agent:', req.get('User-Agent'));
+  console.log('Accept header:', req.get('Accept'));
+  
+  // Check if this is a video request (Stremio trying to "play" the stream)
+  const isVideoRequest = req.get('Accept')?.includes('video/') || 
+                        req.get('Sec-Fetch-Dest') === 'video' ||
+                        req.get('Range');
+  
+  if (isVideoRequest) {
+    console.log('Video request detected - Stremio is trying to play the stream');
+    // Return a proper "not a video" response
+    res.status(404).type('text/plain').send('This is not a video stream - content addition endpoint');
+    return;
+  }
   
   try {
     const { groupId, imdbId } = req.params;
@@ -451,7 +551,7 @@ app.get('/api/groups/:groupId/add-from-stremio/:imdbId', async (req, res) => {
     
     console.log('Add content result:', result);
     
-    // Return a simple text response that Stremio can handle
+    // Return a simple text response
     if (result.isDuplicate) {
       res.status(200).type('text/plain').send(`Already in list: ${result.message}`);
     } else {
