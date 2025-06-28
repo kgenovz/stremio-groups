@@ -530,8 +530,18 @@ app.get('/api/groups/:groupId/add-from-stremio/:imdbId', async (req, res) => {
   console.log('=== ADD FROM STREMIO REQUEST ===');
   console.log('GroupId:', req.params.groupId);
   console.log('ImdbId:', req.params.imdbId);
-  console.log('Headers:', req.headers);
   console.log('User-Agent:', req.get('User-Agent'));
+  
+  // Simple check: If there's a Range header, it's likely a video download attempt
+  const hasRangeHeader = !!req.get('Range');
+  
+  if (hasRangeHeader) {
+    console.log('Range header detected - video download attempt, ignoring');
+    res.status(404).type('text/plain').send('Not a video stream');
+    return;
+  }
+  
+  console.log('Processing add request');
   
   try {
     const { groupId, imdbId } = req.params;
