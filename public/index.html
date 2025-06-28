@@ -188,6 +188,9 @@
                     <div class="copy-notice">Click to copy to clipboard</div>
                     <div class="copied-feedback" id="copiedFeedback">✓ Copied to clipboard!</div>
                 </div>
+                <button id="logoutBtn" style="margin-top: 1rem; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                    🚪 Leave Group
+                </button>
             </div>
 
             <div class="card">
@@ -233,6 +236,52 @@
         let currentContentInfo = null;
         let socket = null;
 
+        // Session storage keys
+        const SESSION_KEYS = {
+            GROUP_ID: 'stremio_groups_current_group_id',
+            GROUP_NAME: 'stremio_groups_current_group_name',
+            ADDON_URL: 'stremio_groups_addon_url'
+        };
+
+        // Session management functions
+        const saveSession = (groupId, groupName, addonUrl) => {
+            try {
+                localStorage.setItem(SESSION_KEYS.GROUP_ID, groupId);
+                localStorage.setItem(SESSION_KEYS.GROUP_NAME, groupName);
+                localStorage.setItem(SESSION_KEYS.ADDON_URL, addonUrl);
+                console.log('Session saved successfully');
+            } catch (error) {
+                console.error('Failed to save session:', error);
+            }
+        };
+
+        const loadSession = () => {
+            try {
+                const groupId = localStorage.getItem(SESSION_KEYS.GROUP_ID);
+                const groupName = localStorage.getItem(SESSION_KEYS.GROUP_NAME);
+                const addonUrl = localStorage.getItem(SESSION_KEYS.ADDON_URL);
+                
+                if (groupId && groupName && addonUrl) {
+                    console.log('Found existing session, restoring...');
+                    return { groupId, groupName, addonUrl };
+                }
+            } catch (error) {
+                console.error('Failed to load session:', error);
+            }
+            return null;
+        };
+
+        const clearSession = () => {
+            try {
+                localStorage.removeItem(SESSION_KEYS.GROUP_ID);
+                localStorage.removeItem(SESSION_KEYS.GROUP_NAME);
+                localStorage.removeItem(SESSION_KEYS.ADDON_URL);
+                console.log('Session cleared');
+            } catch (error) {
+                console.error('Failed to clear session:', error);
+            }
+        };
+
         // --- DOM ELEMENTS ---
         const authSection = document.getElementById('authSection');
         const contentSection = document.getElementById('contentSection');
@@ -247,6 +296,7 @@
         const addBtn = document.getElementById('addBtn');
         const filterButtons = document.querySelectorAll('.filter-btn');
         const copiedFeedback = document.getElementById('copiedFeedback');
+        const logoutBtn = document.getElementById('logoutBtn');
 
         // --- UTILITY FUNCTIONS ---
         const extractImdbId = (input) => {
@@ -284,7 +334,7 @@
         };
 
         // --- CORE LOGIC ---
-        const showContentSection = (groupId, groupName, addonUrl) => {
+        const showContentSection = (groupId, groupName, addonUrl, saveToSession = true) => {
             currentGroupId = groupId;
             currentGroupName = groupName;
 
@@ -294,6 +344,11 @@
             
             authSection.style.display = 'none';
             contentSection.style.display = 'block';
+
+            // Save session for persistence
+            if (saveToSession) {
+                saveSession(groupId, groupName, addonUrl);
+            }
 
             loadContent();
             setupWebSocket();
@@ -413,6 +468,54 @@
             }
         };
 
+        // Logout function
+        const logout = () => {
+            if (confirm('Are you sure you want to leave this group?')) {
+                clearSession();
+                
+                // Disconnect WebSocket
+                if (socket) {
+                    socket.disconnect();
+                    socket = null;
+                }
+                
+                // Reset state
+                currentGroupId = null;
+                currentGroupName = null;
+                currentFilter = 'all';
+                currentContentInfo = null;
+                
+                // Show auth section, hide content section
+                authSection.style.display = 'grid';
+                contentSection.style.display = 'none';
+                
+                // Clear forms
+                createForm.reset();
+                joinForm.reset();
+                addContentForm.reset();
+                
+                // Clear any result messages
+                document.getElementById('createResult').innerHTML = '';
+                document.getElementById('joinResult').innerHTML = '';
+                document.getElementById('addContentResult').innerHTML = '';
+                
+                console.log('Logged out successfully');
+            }
+        };
+
+        // Auto-login on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Page loaded, checking for existing session...');
+            const session = loadSession();
+            
+            if (session) {
+                console.log('Found existing session, auto-logging in...');
+                showContentSection(session.groupId, session.groupName, session.addonUrl, false);
+            } else {
+                console.log('No existing session found');
+            }
+        });
+
         // Make deleteContent globally available
         window.deleteContent = deleteContent;
 
@@ -424,6 +527,9 @@
                 copyToClipboard(currentGroupId);
             }
         });
+
+        // Logout button
+        logoutBtn.addEventListener('click', logout);
 
         createForm.addEventListener('submit', async (e) => {
             e.preventDefault();

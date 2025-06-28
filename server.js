@@ -532,11 +532,23 @@ app.get('/api/groups/:groupId/add-from-stremio/:imdbId', async (req, res) => {
   console.log('ImdbId:', req.params.imdbId);
   console.log('User-Agent:', req.get('User-Agent'));
   console.log('Accept header:', req.get('Accept'));
+  console.log('Range header:', req.get('Range'));
+  console.log('Sec-Fetch-Dest:', req.get('Sec-Fetch-Dest'));
   
-  // Check if this is a video request (Stremio trying to "play" the stream)
-  const isVideoRequest = req.get('Accept')?.includes('video/') || 
-                        req.get('Sec-Fetch-Dest') === 'video' ||
-                        req.get('Range');
+  // More specific video request detection
+  // Only treat as video request if it has Range header (byte-range requests)
+  // OR if it explicitly requests video content types with range
+  const hasRangeHeader = !!req.get('Range');
+  const isExplicitVideoRequest = req.get('Sec-Fetch-Dest') === 'video';
+  const acceptsVideoOnly = req.get('Accept')?.startsWith('video/') && !req.get('Accept')?.includes('*/*');
+  
+  const isVideoRequest = hasRangeHeader || isExplicitVideoRequest || acceptsVideoOnly;
+  
+  console.log('Video detection analysis:');
+  console.log('- Has Range header:', hasRangeHeader);
+  console.log('- Explicit video request:', isExplicitVideoRequest);
+  console.log('- Accepts video only:', acceptsVideoOnly);
+  console.log('- Final decision - is video request:', isVideoRequest);
   
   if (isVideoRequest) {
     console.log('Video request detected - Stremio is trying to play the stream');
@@ -544,6 +556,8 @@ app.get('/api/groups/:groupId/add-from-stremio/:imdbId', async (req, res) => {
     res.status(404).type('text/plain').send('This is not a video stream - content addition endpoint');
     return;
   }
+  
+  console.log('Legitimate add request detected - proceeding with content addition');
   
   try {
     const { groupId, imdbId } = req.params;
