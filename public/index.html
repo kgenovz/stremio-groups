@@ -143,10 +143,46 @@
             opacity: 1;
         }
 
+        /* New styles for addon URL section */
+        .addon-url-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 0.5rem 0 1rem 0;
+            flex-wrap: wrap;
+        }
+        .addon-url {
+            flex: 1;
+            min-width: 300px;
+        }
+        .copy-addon-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .copy-addon-btn:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+        .copy-addon-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         @media (max-width: 768px) {
             .auth-section { grid-template-columns: 1fr; }
             .group-id-value { font-size: 2.2rem; letter-spacing: 2px; }
             .group-id-header h1 { font-size: 1.8rem; }
+            .addon-url-container { flex-direction: column; align-items: stretch; }
+            .addon-url { min-width: unset; }
         }
     </style>
 </head>
@@ -195,7 +231,11 @@
 
             <div class="card">
                 <h2>Stremio Addon</h2>
-                <p>Addon URL: <span id="addonUrlResult" class="addon-url"></span></p>
+                <p>Addon URL:</p>
+                <div class="addon-url-container">
+                    <span id="addonUrlResult" class="addon-url"></span>
+                    <button id="copyAddonBtn" class="copy-addon-btn">📋 Copy URL</button>
+                </div>
                 <p style="color: #666; font-size: 0.9rem; margin: 0.5rem 0 1rem 0;">Install the addon in Stremio to see the shared catalog and to add content directly from the Stremio app.</p>
 
                 <h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #555;">Find Movie/Series to Add</h3>
@@ -235,6 +275,7 @@
         let currentFilter = 'all';
         let currentContentInfo = null;
         let socket = null;
+        let currentAddonUrl = null;
 
         // Session storage keys
         const SESSION_KEYS = {
@@ -288,6 +329,7 @@
         const groupTitle = document.getElementById('groupTitle');
         const groupIdDisplay = document.getElementById('groupIdDisplay');
         const addonUrlResult = document.getElementById('addonUrlResult');
+        const copyAddonBtn = document.getElementById('copyAddonBtn');
         const contentList = document.getElementById('contentList');
         const createForm = document.getElementById('createForm');
         const joinForm = document.getElementById('joinForm');
@@ -318,6 +360,7 @@
                 setTimeout(() => {
                     copiedFeedback.classList.remove('show');
                 }, 2000);
+                return true;
             } catch (err) {
                 // Fallback for older browsers
                 const textArea = document.createElement('textarea');
@@ -330,6 +373,7 @@
                 setTimeout(() => {
                     copiedFeedback.classList.remove('show');
                 }, 2000);
+                return true;
             }
         };
 
@@ -337,6 +381,7 @@
         const showContentSection = (groupId, groupName, addonUrl, saveToSession = true) => {
             currentGroupId = groupId;
             currentGroupName = groupName;
+            currentAddonUrl = addonUrl;
 
             groupTitle.textContent = `Group: ${groupName}`;
             groupIdDisplay.textContent = groupId;
@@ -484,6 +529,7 @@
                 currentGroupName = null;
                 currentFilter = 'all';
                 currentContentInfo = null;
+                currentAddonUrl = null;
                 
                 // Show auth section, hide content section
                 authSection.style.display = 'grid';
@@ -500,6 +546,29 @@
                 document.getElementById('addContentResult').innerHTML = '';
                 
                 console.log('Logged out successfully');
+            }
+        };
+
+        // Copy addon URL function
+        const copyAddonUrl = async () => {
+            if (!currentAddonUrl) return;
+            
+            copyAddonBtn.disabled = true;
+            copyAddonBtn.textContent = 'Copying...';
+            
+            try {
+                await copyToClipboard(currentAddonUrl);
+                copyAddonBtn.textContent = '✓ Copied!';
+                setTimeout(() => {
+                    copyAddonBtn.textContent = '📋 Copy URL';
+                    copyAddonBtn.disabled = false;
+                }, 2000);
+            } catch (error) {
+                copyAddonBtn.textContent = '❌ Failed';
+                setTimeout(() => {
+                    copyAddonBtn.textContent = '📋 Copy URL';
+                    copyAddonBtn.disabled = false;
+                }, 2000);
             }
         };
 
@@ -527,6 +596,9 @@
                 copyToClipboard(currentGroupId);
             }
         });
+
+        // Copy addon URL button
+        copyAddonBtn.addEventListener('click', copyAddonUrl);
 
         // Logout button
         logoutBtn.addEventListener('click', logout);
