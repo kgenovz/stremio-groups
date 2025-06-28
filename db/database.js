@@ -4,114 +4,127 @@ const fs = require('fs');
 
 class Database {
   constructor() {
-    console.log('=== DATABASE INITIALIZATION START ===');
-    console.log('Platform:', process.platform);
-    console.log('Current working directory:', process.cwd());
-    console.log('__dirname:', __dirname);
-    
-    // Initialize as null first
-    this.db = null;
-    this.isReady = false;
-    
-    // Railway-specific database path logic
-    let dbDir;
-    
-    if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT) {
-      // In Railway, use the app directory for persistence
-      dbDir = path.join(process.cwd(), 'data');
-      console.log('Railway environment detected, using app directory for database');
-    } else {
-      // Local development
-      dbDir = path.join(__dirname, '..', 'db');
-      console.log('Local environment detected');
-    }
-    
-    console.log('Environment variables:');
-    console.log('- NODE_ENV:', process.env.NODE_ENV || 'not set');
-    console.log('- RAILWAY_ENVIRONMENT:', process.env.RAILWAY_ENVIRONMENT || 'not set');
-    console.log('- PWD:', process.env.PWD || 'not set');
-    console.log('- Database directory path:', dbDir);
-    
-    // Create database directory with better error handling
-    try {
-      if (!fs.existsSync(dbDir)) {
-        console.log('Creating database directory...');
-        fs.mkdirSync(dbDir, { recursive: true });
-        console.log('Database directory created successfully');
-      } else {
-        console.log('Database directory already exists');
-      }
-      
-      // Test write permissions
-      const testFile = path.join(dbDir, 'write-test.tmp');
-      fs.writeFileSync(testFile, 'test');
-      fs.unlinkSync(testFile);
-      console.log('Database directory is writable');
-      
-    } catch (error) {
-      console.error('Error with database directory:', error);
-      // Fallback to temp directory if main directory fails
-      dbDir = '/tmp';
-      console.log('Falling back to /tmp directory');
-    }
-    
-    const dbPath = path.join(dbDir, 'data.db');
-    console.log('Final database file path:', dbPath);
-    
-    // Check if database file exists and is readable
-    if (fs.existsSync(dbPath)) {
-      try {
-        const stats = fs.statSync(dbPath);
-        console.log('Database file exists, size:', stats.size, 'bytes');
-      } catch (error) {
-        console.error('Error reading database file stats:', error);
-      }
-    } else {
-      console.log('Database file does not exist, will be created');
-    }
-    
-    // Create the database connection with Railway-specific options
-    console.log('Creating SQLite database connection...');
-    this.db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
-      if (err) {
-        console.error('Error opening database:', err);
-        console.error('Error code:', err.code);
-        console.error('Error errno:', err.errno);
-        this.isReady = false;
-        
-        // Try alternative path if first attempt fails
-        if (!err.message.includes('/tmp')) {
-          console.log('Retrying with /tmp directory...');
-          this.retryWithTempDir();
-        }
-      } else {
-        console.log('Connected to SQLite database successfully');
-        console.log('Database connection object created');
-        
-        // Test the connection with a simple query
-        this.db.get("SELECT sqlite_version() as version", (testErr, row) => {
-          if (testErr) {
-            console.error('Database connection test failed:', testErr);
-            this.isReady = false;
-          } else {
-            console.log('SQLite version:', row.version);
-            console.log('Database connection test successful');
-            
-            // Enable Foreign Key enforcement
-            this.db.run('PRAGMA foreign_keys = ON;', (pragmaErr) => {
-              if (pragmaErr) {
-                console.error("Failed to enable foreign keys:", pragmaErr);
-                this.isReady = false;
-              } else {
-                console.log("Foreign key enforcement is on.");
-                this.initTables();
-              }
-            });
-          }
-        });
-      }
-    });
+  console.log('=== DATABASE INITIALIZATION START ===');
+  console.log('Platform:', process.platform);
+  console.log('Current working directory:', process.cwd());
+  console.log('__dirname:', __dirname);
+  
+  // Initialize as null first
+  this.db = null;
+  this.isReady = false;
+  
+  // Railway persistent storage path
+  let dbDir;
+  
+  if (process.env.RAILWAY_VOLUME_MOUNT_PATH) {
+    // Use Railway volume for persistence
+    dbDir = process.env.RAILWAY_VOLUME_MOUNT_PATH;
+    console.log('Using Railway volume for database persistence:', dbDir);
+  } else if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT) {
+    // Fallback to app directory in Railway (but this might not persist)
+    dbDir = path.join(process.cwd(), 'persistent-data');
+    console.log('Railway environment detected, using persistent-data directory');
+  } else {
+    // Local development
+    dbDir = path.join(__dirname, '..', 'db');
+    console.log('Local environment detected');
   }
+  
+  console.log('Environment variables:');
+  console.log('- NODE_ENV:', process.env.NODE_ENV || 'not set');
+  console.log('- RAILWAY_ENVIRONMENT:', process.env.RAILWAY_ENVIRONMENT || 'not set');
+  console.log('- RAILWAY_VOLUME_MOUNT_PATH:', process.env.RAILWAY_VOLUME_MOUNT_PATH || 'not set');
+  console.log('- Database directory path:', dbDir);
+  
+  // Create database directory with better error handling
+  try {
+    if (!fs.existsSync(dbDir)) {
+      console.log('Creating database directory...');
+      fs.mkdirSync(dbDir, { recursive: true });
+      console.log('Database directory created successfully');
+    } else {
+      console.log('Database directory already exists');
+      
+      // List contents of directory for debugging
+      try {
+        const files = fs.readdirSync(dbDir);
+        console.log('Directory contents:', files);
+      } catch (listError) {
+        console.log('Could not list directory contents:', listError.message);
+      }
+    }
+    
+    // Test write permissions
+    const testFile = path.join(dbDir, 'write-test.tmp');
+    fs.writeFileSync(testFile, 'test');
+    fs.unlinkSync(testFile);
+    console.log('Database directory is writable');
+    
+  } catch (error) {
+    console.error('Error with database directory:', error);
+    // Fallback to temp directory if main directory fails
+    dbDir = '/tmp';
+    console.log('Falling back to /tmp directory (WARNING: Data will not persist!)');
+  }
+  
+  const dbPath = path.join(dbDir, 'stremio-groups.db'); // More specific name
+  console.log('Final database file path:', dbPath);
+  
+  // Check if database file exists and is readable
+  if (fs.existsSync(dbPath)) {
+    try {
+      const stats = fs.statSync(dbPath);
+      console.log('Database file exists, size:', stats.size, 'bytes');
+      console.log('Database last modified:', stats.mtime);
+    } catch (error) {
+      console.error('Error reading database file stats:', error);
+    }
+  } else {
+    console.log('Database file does not exist, will be created');
+  }
+  
+  // Create the database connection with Railway-specific options
+  console.log('Creating SQLite database connection...');
+  this.db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
+    if (err) {
+      console.error('Error opening database:', err);
+      console.error('Error code:', err.code);
+      console.error('Error errno:', err.errno);
+      this.isReady = false;
+      
+      // Try alternative path if first attempt fails
+      if (!err.message.includes('/tmp')) {
+        console.log('Retrying with /tmp directory...');
+        this.retryWithTempDir();
+      }
+    } else {
+      console.log('Connected to SQLite database successfully');
+      console.log('Database connection object created');
+      
+      // Test the connection with a simple query
+      this.db.get("SELECT sqlite_version() as version", (testErr, row) => {
+        if (testErr) {
+          console.error('Database connection test failed:', testErr);
+          this.isReady = false;
+        } else {
+          console.log('SQLite version:', row.version);
+          console.log('Database connection test successful');
+          
+          // Enable Foreign Key enforcement
+          this.db.run('PRAGMA foreign_keys = ON;', (pragmaErr) => {
+            if (pragmaErr) {
+              console.error("Failed to enable foreign keys:", pragmaErr);
+              this.isReady = false;
+            } else {
+              console.log("Foreign key enforcement is on.");
+              this.initTables();
+            }
+          });
+        }
+      });
+    }
+  });
+}
 
   // Retry with temp directory if initial path fails
   retryWithTempDir() {
