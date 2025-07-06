@@ -68,18 +68,362 @@ async function fetchOMDBInfo(imdbId) {
   };
 }
 
+function generateSuccessPageHTML(group, params, movies, series, req) {
+    const { added, duplicate, existing, error } = params;
+
+    let statusMessage = '';
+    let statusClass = '';
+    let statusEmoji = '';
+
+    if (error) {
+        statusMessage = `Failed to add content: ${decodeURIComponent(error)}`;
+        statusClass = 'error';
+        statusEmoji = '❌';
+    } else if (duplicate === 'true' || existing) {
+        const title = existing ? decodeURIComponent(existing) : 'content';
+        statusMessage = `"${title}"\nis already in your group list`;
+        statusClass = 'warning';
+        statusEmoji = '⚠️';
+    } else if (added) {
+        statusMessage = `"${decodeURIComponent(added)}"\nwas successfully added to your group!`;
+        statusClass = 'success';
+        statusEmoji = '✅';
+    } else {
+        statusMessage = 'Welcome to your group page!';
+        statusClass = 'info';
+        statusEmoji = '🎬';
+    }
+
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success - ${group.name}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 1rem;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        .success-header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .status-emoji {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        .status-message {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .status-message.success { color: #28a745; }
+        .status-message.warning { color: #ffc107; }
+        .status-message.error { color: #dc3545; }
+        .status-message.info { color: #17a2b8; }
+        
+        .group-info {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .group-name {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .group-id {
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: #667eea;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            display: inline-block;
+            letter-spacing: 2px;
+        }
+        
+        .content-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .content-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .content-count {
+            background: #667eea;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .content-item {
+            text-align: center;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem 0.5rem;
+            transition: transform 0.2s;
+        }
+        
+        .content-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .content-poster {
+            width: 80px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .content-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 0.25rem;
+        }
+        
+        .content-type {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            color: white;
+        }
+        
+        .content-type.movie { background: #667eea; }
+        .content-type.series { background: #28a745; }
+        
+        .empty-content {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 2rem;
+        }
+        
+        .back-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 1rem;
+            transition: transform 0.2s;
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+            text-decoration: none;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .group-name { font-size: 1.5rem; }
+            .group-id { font-size: 1.2rem; letter-spacing: 1px; }
+            .content-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.75rem; }
+            .content-poster { width: 60px; height: 90px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-header">
+            <span class="status-emoji">${statusEmoji}</span>
+            <div class="status-message ${statusClass}">${statusMessage}</div>
+            <a href="${req.protocol}://${req.get('host')}" class="back-button">🏠 Go to Main Site</a>
+        </div>
+        
+        <div class="group-info">
+            <div class="group-name">${group.name}</div>
+            <div class="group-id">${group.id}</div>
+        </div>
+        
+        ${movies.length > 0 ? `
+        <div class="content-section">
+            <div class="content-header">
+                🎬 Movies <span class="content-count">${movies.length}</span>
+            </div>
+            <div class="content-grid">
+                ${movies.map(movie => `
+                    <div class="content-item">
+                        <img class="content-poster" src="${movie.poster_url || 'https://via.placeholder.com/80x120.png?text=No+Poster'}" alt="${movie.title}">
+                        <div class="content-title">${movie.title}</div>
+                        <div class="content-type movie">Movie</div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        ` : ''}
+        
+        ${series.length > 0 ? `
+        <div class="content-section">
+            <div class="content-header">
+                📺 TV Series <span class="content-count">${series.length}</span>
+            </div>
+            <div class="content-grid">
+                ${series.map(show => `
+                    <div class="content-item">
+                        <img class="content-poster" src="${show.poster_url || 'https://via.placeholder.com/80x120.png?text=No+Poster'}" alt="${show.title}">
+                        <div class="content-title">${show.title}</div>
+                        <div class="content-type series">Series</div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        ` : ''}
+        
+        ${movies.length === 0 && series.length === 0 ? `
+        <div class="content-section">
+            <div class="empty-content">
+                <p>🎭 No content has been added to this group yet.</p>
+                <p>Start by adding some movies or TV series from Stremio!</p>
+            </div>
+        </div>
+        ` : ''}
+    </div>
+</body>
+</html>
+  `;
+}
+
+async function resolveKitsuToImdb(kitsuId) {
+    try {
+        console.log(`🎌 Resolving Kitsu ID ${kitsuId}...`);
+
+        // Get anime data from Kitsu
+        const kitsuResponse = await fetch(`https://kitsu.io/api/edge/anime/${kitsuId}`);
+        if (!kitsuResponse.ok) {
+            throw new Error('Kitsu anime not found');
+        }
+
+        const kitsuData = await kitsuResponse.json();
+        const anime = kitsuData.data.attributes;
+
+        const title = anime.canonicalTitle || anime.titles?.en;
+        const year = anime.startDate ? new Date(anime.startDate).getFullYear() : null;
+
+        if (!title) {
+            throw new Error('No title found for anime');
+        }
+
+        console.log(`Found anime: "${title}" (${year})`);
+
+        // Try to find it in OMDB
+        let omdbUrl = `${OMDB_BASE_URL}?t=${encodeURIComponent(title)}&apikey=${OMDB_API_KEY}`;
+        if (year) omdbUrl += `&y=${year}`;
+
+        const omdbResponse = await fetch(omdbUrl);
+        const omdbData = await omdbResponse.json();
+
+        if (omdbData.Response === 'True' && omdbData.imdbID) {
+            console.log(`✅ Found IMDB match: "${title}" → ${omdbData.imdbID}`);
+            return omdbData.imdbID;
+        }
+
+        // If exact match failed, try search
+        const searchUrl = `${OMDB_BASE_URL}?s=${encodeURIComponent(title)}&apikey=${OMDB_API_KEY}`;
+        const searchResponse = await fetch(searchUrl);
+        const searchData = await searchResponse.json();
+
+        if (searchData.Response === 'True' && searchData.Search && searchData.Search.length > 0) {
+            // Take the first result
+            const firstResult = searchData.Search[0];
+            console.log(`✅ Found IMDB via search: "${title}" → ${firstResult.imdbID}`);
+            return firstResult.imdbID;
+        }
+
+        return null;
+
+    } catch (error) {
+        console.error(`Error resolving Kitsu ${kitsuId}:`, error);
+        return null;
+    }
+}
+
 /**
  * Centralized logic to add content to a group, checking for duplicates.
  * @param {string} groupId - The ID of the group.
  * @param {string} imdbId - The IMDB ID of the content to add.
  * @returns {Promise<object>} An object containing the success status, message, and content info.
  */
-async function addContentToGroup(groupId, imdbId) {
+
+
+async function addContentToGroup(groupId, contentId) {
     console.log('=== addContentToGroup START ===');
     console.log('GroupId:', groupId);
-    console.log('ImdbId:', imdbId);
-    
+    console.log('ContentId received:', contentId);
+
     try {
+        let imdbId;
+
+        // Check if it's an IMDB ID (starts with 'tt')
+        if (contentId && contentId.match(/^tt\d+$/)) {
+            imdbId = contentId;
+            console.log('✅ Using IMDB ID directly:', imdbId);
+        }
+        // Check if it's a Kitsu ID (just numbers)
+        else if (contentId && contentId.match(/^\d+$/)) {
+            console.log('🎌 Detected Kitsu ID, attempting resolution...');
+
+            imdbId = await resolveKitsuToImdb(contentId);
+
+            if (!imdbId) {
+                throw new Error(`Could not find IMDB match for Kitsu anime ${contentId}. This anime might not be available on IMDB.`);
+            }
+
+            console.log(`✅ Resolved Kitsu ${contentId} → IMDB ${imdbId}`);
+        }
+        else {
+            throw new Error(`Invalid content ID format: "${contentId}". Use IMDB format (tt1234567) or Kitsu ID (12345).`);
+        }
+
         // Check if group exists
         const group = await db.getGroup(groupId);
         if (!group) {
@@ -92,14 +436,14 @@ async function addContentToGroup(groupId, imdbId) {
         console.log('Checking for existing content...');
         const existing = await db.getContentByImdbId(groupId, imdbId);
         console.log('Existing content check result:', existing);
-        
+
         if (existing) {
             console.log('Content already exists - returning duplicate message');
-            return { 
-                success: false, 
-                message: `"${existing.title}" is already in the group list.`, 
-                info: null, 
-                isDuplicate: true 
+            return {
+                success: false,
+                message: `"${existing.title}" is already in the group list.`,
+                info: null,
+                isDuplicate: true
             };
         }
 
@@ -107,7 +451,7 @@ async function addContentToGroup(groupId, imdbId) {
         console.log('Fetching OMDB info...');
         const info = await fetchOMDBInfo(imdbId);
         console.log('OMDB info fetched:', { title: info.title, type: info.type });
-        
+
         // Add to database with try-catch for constraint errors
         console.log('Adding to database...');
         try {
@@ -117,37 +461,37 @@ async function addContentToGroup(groupId, imdbId) {
             // Handle SQLite constraint errors (duplicates that slipped through)
             if (dbError.code === 'SQLITE_CONSTRAINT' && dbError.message.includes('UNIQUE constraint failed')) {
                 console.log('Caught duplicate insertion at database level - race condition detected');
-                
+
                 // Get the existing content info for a proper response
                 const existingContent = await db.getContentByImdbId(groupId, imdbId);
                 const title = existingContent ? existingContent.title : info.title;
-                
-                return { 
-                    success: false, 
-                    message: `"${title}" is already in the group list.`, 
-                    info: null, 
-                    isDuplicate: true 
+
+                return {
+                    success: false,
+                    message: `"${title}" is already in the group list.`,
+                    info: null,
+                    isDuplicate: true
                 };
             }
             // Re-throw other database errors
             throw dbError;
         }
-        
+
         // Broadcast the update to the specific group's room
         console.log('Broadcasting to WebSocket room:', groupId);
         io.to(groupId).emit('new-content-added', info);
-        
-        const successResult = { 
-            success: true, 
-            message: `"${info.title}" was added to the group.`, 
-            info: info, 
-            isDuplicate: false 
+
+        const successResult = {
+            success: true,
+            message: `"${info.title}" was added to the group.`,
+            info: info,
+            isDuplicate: false
         };
-        
+
         console.log('=== addContentToGroup SUCCESS ===');
         console.log('Returning result:', successResult);
         return successResult;
-        
+
     } catch (error) {
         console.error('=== addContentToGroup ERROR ===');
         console.error('Error details:', error);
@@ -282,40 +626,71 @@ app.get('/api/groups/:id/content', async (req, res) => {
 
 // Add content to a group (from web interface)
 app.post('/api/groups/:id/content', async (req, res) => {
-  try {
-    const { imdbId } = req.body;
-    const { id: groupId } = req.params;
-    if (!imdbId || !imdbId.match(/^tt\d+$/)) {
-      return res.status(400).json({ error: 'A valid IMDB ID is required (e.g., tt0111161)' });
-    }
-    
-    const result = await addContentToGroup(groupId, imdbId);
-    
-    if (result.isDuplicate) {
-        return res.status(409).json({ error: result.message }); // 409 Conflict
-    }
+    try {
+        const { contentId } = req.body; // Changed from imdbId to contentId
+        const { id: groupId } = req.params;
 
-    res.status(201).json(result);
-  } catch (error) {
-    console.error('Error adding content:', error);
-    if (error.message.includes('OMDB')) return res.status(404).json({ error: error.message });
-    res.status(500).json({ error: 'Failed to add content to the group' });
-  }
+        const parsedId = extractContentId(contentId);
+        if (!parsedId) {
+            return res.status(400).json({ error: 'Invalid content ID format (use tt123456 for IMDB or 12345 for Kitsu).' });
+        }
+
+        let imdbId;
+
+        if (parsedId.type === 'imdb') {
+            imdbId = parsedId.id;
+        } else if (parsedId.type === 'kitsu') {
+            imdbId = await resolveKitsuToImdb(parsedId.id);
+            if (!imdbId) {
+                return res.status(404).json({ error: 'Could not resolve Kitsu anime to IMDB. Try using the IMDB ID instead.' });
+            }
+        }
+
+        const result = await addContentToGroup(groupId, imdbId);
+
+        if (result.isDuplicate) {
+            return res.status(409).json({ error: result.message });
+        }
+
+        res.status(201).json(result);
+    } catch (error) {
+        console.error('Error adding content:', error);
+        if (error.message.includes('OMDB')) return res.status(404).json({ error: error.message });
+        res.status(500).json({ error: 'Failed to add content to the group' });
+    }
 });
 
+
 // Fetch movie/series info from OMDB (proxy for web UI)
-app.get('/api/content/info/:imdbId', async (req, res) => {
-  try {
-    const { imdbId } = req.params;
-    if (!imdbId.match(/^tt\d+$/)) {
-      return res.status(400).json({ error: 'Invalid IMDB ID format.' });
+app.get('/api/content/info/:contentId', async (req, res) => {
+    try {
+        const { contentId } = req.params;
+        const parsedId = extractContentId(contentId);
+
+        if (!parsedId) {
+            return res.status(400).json({ error: 'Invalid content ID format.' });
+        }
+
+        let imdbId;
+
+        if (parsedId.type === 'imdb') {
+            imdbId = parsedId.id;
+        } else if (parsedId.type === 'kitsu') {
+            imdbId = await resolveKitsuToImdb(parsedId.id);
+            if (!imdbId) {
+                return res.status(404).json({ error: 'Could not find IMDB match for this anime.' });
+            }
+        } else {
+            return res.status(400).json({ error: 'Unsupported content ID type.' });
+        }
+
+        const info = await fetchOMDBInfo(imdbId);
+        res.json({ ...info, originalId: contentId, resolvedImdbId: imdbId });
+
+    } catch (error) {
+        console.error('Error fetching content info:', error);
+        res.status(404).json({ error: error.message });
     }
-    const info = await fetchOMDBInfo(imdbId);
-    res.json(info);
-  } catch (error) {
-    console.error('Error fetching OMDB info:', error);
-    res.status(404).json({ error: error.message });
-  }
 });
 
 // Delete content from a group
@@ -474,90 +849,158 @@ app.put('/api/groups/:id/settings', async (req, res) => {
 
 // Stremio "Add to List" stream provider
 app.get('/:groupId/stream/:type/:id.json', async (req, res) => {
-  try {
-    const { groupId, id } = req.params;
-    const imdbId = id.split(':')[0];
-    
-    console.log(`Stream request: groupId=${groupId}, imdbId=${imdbId}`);
-    
-    const group = await db.getGroup(groupId);
-    if (!group) {
-      console.log('Group not found');
-      return res.status(404).json({ streams: [] });
-    }
+    try {
+        const { groupId, id } = req.params;
 
-    // Check if content already exists
-    const existing = await db.getContentByImdbId(groupId, imdbId);
-    if (existing) {
-      console.log('Content already exists in group');
-      return res.json({
-        streams: [{
-          name: `[${group.name}]`,
-          title: `✅ Already in group: "${existing.title}"`,
-          // Return a special URL that doesn't get called
-          url: 'https://example.com/already-added.mp4',
-          behaviorHints: {
-            notWebReady: true,
-            bingeGroup: 'already-added'
-          }
-        }]
-      });
-    }
+        console.log(`Raw ID from Stremio: "${id}"`);
 
-    // For new content, provide the add action
-    console.log('Providing add action for new content');
-    
-    res.json({
-      streams: [{
-        name: `[${group.name}]`,
-        title: '✨ Add to Group List',
-        // Use a special protocol or make it clear it's not a video
-        url: `${req.protocol}://${req.get('host')}/api/groups/${groupId}/add-from-stremio/${imdbId}`,
-        behaviorHints: {
-          notWebReady: true,
-          bingeGroup: 'add-to-list'
+        // BETTER ID EXTRACTION - handle multiple formats
+        let contentId;
+
+        if (id.startsWith('kitsu:')) {
+            // Format: "kitsu:12345" or "kitsu:12345:1:1"
+            const parts = id.split(':');
+            contentId = parts[1]; // Get the number after "kitsu:"
+            console.log(`Extracted Kitsu ID: "${contentId}"`);
+        } else if (id.match(/^kitsu\d+/)) {
+            // Format: "kitsu12345"
+            contentId = id.replace('kitsu', '');
+            console.log(`Extracted Kitsu ID from kitsu prefix: "${contentId}"`);
+        } else {
+            // Standard format: "tt1234567" or "tt1234567:1:1"
+            contentId = id.split(':')[0];
+            console.log(`Extracted standard ID: "${contentId}"`);
         }
-      }]
-    });
-  } catch (error) {
-    console.error('Error serving stream:', error);
-    res.status(500).json({ streams: [] });
-  }
+
+        console.log(`Stream request: groupId=${groupId}, contentId=${contentId}`);
+
+        const group = await db.getGroup(groupId);
+        if (!group) {
+            console.log('Group not found');
+            return res.status(404).json({ streams: [] });
+        }
+
+        // Check if content already exists
+        let existingCheck;
+
+        if (contentId && contentId.match(/^tt\d+$/)) {
+            // IMDB ID - check directly
+            existingCheck = await db.getContentByImdbId(groupId, contentId);
+        } else if (contentId && contentId.match(/^\d+$/)) {
+            // Kitsu ID - need to resolve to IMDB first to check
+            console.log('🎌 Resolving Kitsu ID to check for existing content...');
+            const resolvedImdbId = await resolveKitsuToImdb(contentId);
+            if (resolvedImdbId) {
+                existingCheck = await db.getContentByImdbId(groupId, resolvedImdbId);
+            }
+        }
+
+        if (existingCheck) {
+            console.log('Content already exists in group');
+            return res.json({
+                streams: [{
+                    name: `[${group.name}]`,
+                    title: `✅ Already in group: "${existingCheck.title}"`,
+                    externalUrl: `${req.protocol}://${req.get('host')}/success/${groupId}?existing=${encodeURIComponent(existingCheck.title)}`,
+                    behaviorHints: {
+                        notWebReady: true,
+                        bingeGroup: `${groupId}-already-added`
+                    }
+                }]
+            });
+        }
+
+        // For new content, provide the add action
+        console.log('Providing add action for new content');
+
+        res.json({
+            streams: [{
+                name: `[${group.name}]`,
+                title: '✨ Add to Group List',
+                externalUrl: `${req.protocol}://${req.get('host')}/api/groups/${groupId}/add-from-stremio/${contentId}`,
+                behaviorHints: {
+                    notWebReady: true,
+                    bingeGroup: `${groupId}-add-to-list`
+                }
+            }]
+        });
+    } catch (error) {
+        console.error('Error serving stream:', error);
+        res.status(500).json({ streams: [] });
+    }
 });
+
 
 // Endpoint that Stremio's stream URL hits
 app.get('/api/groups/:groupId/add-from-stremio/:imdbId', async (req, res) => {
-  console.log('=== ADD FROM STREMIO REQUEST ===');
-  console.log('GroupId:', req.params.groupId);
-  console.log('ImdbId:', req.params.imdbId);
-  console.log('User-Agent:', req.get('User-Agent'));
-  
-  // Simple check: If there's a Range header, it's likely a video download attempt
-  const hasRangeHeader = !!req.get('Range');
-  
-  if (hasRangeHeader) {
-    console.log('Range header detected - video download attempt, ignoring');
-    res.status(404).type('text/plain').send('Not a video stream');
-    return;
-  }
-  
-  console.log('Processing add request');
-  
-  try {
-    const { groupId, imdbId } = req.params;
-    const result = await addContentToGroup(groupId, imdbId);
-    
-    console.log('Add content result:', result);
-    
-    // Stremio can display simple HTML feedback pages
-    if (result.isDuplicate) {
-      return res.status(200).send(`<h1>Already in List</h1><p><b>${result.message}</b></p>`);
+    console.log('=== ADD FROM STREMIO REQUEST ===');
+    console.log('GroupId:', req.params.groupId);
+    console.log('ImdbId:', req.params.imdbId);
+    console.log('User-Agent:', req.get('User-Agent'));
+
+    try {
+        const { groupId, imdbId } = req.params;
+        const result = await addContentToGroup(groupId, imdbId);
+
+        console.log('Add content result:', result);
+
+        const successUrl = `/success/${groupId}?added=${encodeURIComponent(result.info?.title || 'content')}&duplicate=${result.isDuplicate}`;
+        res.redirect(successUrl);
+
+    } catch (error) {
+        console.error('Error adding content from Stremio:', error);
+        const errorUrl = `/success/${req.params.groupId}?error=${encodeURIComponent(error.message)}`;
+        res.redirect(errorUrl);
     }
-    res.status(200).send(`<h1>Success!</h1><p><b>${result.message}</b></p>`);
-  } catch (error) {
-    console.error('Error adding content from Stremio:', error);
-    res.status(500).send(`<h1>Error</h1><p>Failed to add content. ${error.message}</p>`);
-  }
+});
+
+app.get('/success/:groupId', async (req, res) => {
+    try {
+        const { groupId } = req.params;
+        const { added, duplicate, existing, error } = req.query;
+
+        const group = await db.getGroup(groupId);
+        if (!group) {
+            return res.status(404).send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Group Not Found</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 2rem; background: #f5f5f5;">
+            <h1 style="color: #dc3545;">Group Not Found</h1>
+            <p>The group you're looking for doesn't exist.</p>
+        </body>
+        </html>
+      `);
+        }
+
+        // Get current content in the group
+        const content = await db.getContentByGroup(groupId);
+        const movies = content.filter(item => item.type === 'movie');
+        const series = content.filter(item => item.type === 'series');
+
+        // Generate the success page HTML
+        const successHtml = generateSuccessPageHTML(group, { added, duplicate, existing, error }, movies, series, req);
+        res.send(successHtml);
+
+    } catch (error) {
+        console.error('Error serving success page:', error);
+        res.status(500).send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <title>Error</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="font-family: Arial, sans-serif; text-align: center; padding: 2rem; background: #f5f5f5;">
+          <h1 style="color: #dc3545;">Error</h1>
+          <p>Something went wrong. Please try again.</p>
+      </body>
+      </html>
+    `);
+    }
 });
 
 // Stremio catalog provider

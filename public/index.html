@@ -242,8 +242,8 @@
                 
                 <form id="addContentForm">
                     <div class="form-group">
-                        <label for="imdbId">IMDB ID or URL</label>
-                        <input type="text" id="imdbId" placeholder="tt0111161 or https://www.imdb.com/title/tt0111161/" required>
+                        <label for="contentId">IMDB ID, Kitsu ID, or URL</label>
+                        <input type="text" id="contentId" placeholder="tt0111161, 1234, or https://kitsu.io/anime/1234" required>
                     </div>
                     <div style="display: flex; gap: 1rem; align-items: center;">
                         <button type="button" id="fetchInfoBtn">Fetch Info</button>
@@ -341,11 +341,19 @@
         const logoutBtn = document.getElementById('logoutBtn');
 
         // --- UTILITY FUNCTIONS ---
-        const extractImdbId = (input) => {
+        const extractContentId = (input) => {
             const trimmed = input.trim();
-            if (trimmed.match(/^tt\d+$/)) return trimmed;
-            const urlMatch = trimmed.match(/(?:imdb\.com\/title\/)?(tt\d+)/);
-            return urlMatch ? urlMatch[1] : null;
+
+            // IMDB ID (existing logic)
+            if (trimmed.match(/^tt\d+$/)) return { type: 'imdb', id: trimmed };
+            const imdbMatch = trimmed.match(/(?:imdb\.com\/title\/)?(tt\d+)/);
+            if (imdbMatch) return { type: 'imdb', id: imdbMatch[1] };
+
+            // Kitsu ID - support both direct ID and URL
+            const kitsuMatch = trimmed.match(/(?:kitsu\.io\/anime\/)?(\d+)/);
+            if (kitsuMatch) return { type: 'kitsu', id: kitsuMatch[1] };
+
+            return null;
         };
 
         const displayResult = (elementId, message, isError = false) => {
@@ -645,7 +653,7 @@
 
         fetchInfoBtn.addEventListener('click', async () => {
             const input = document.getElementById('imdbId').value;
-            const imdbId = extractImdbId(input);
+            const imdbId = extractContentId(input);
             if (!imdbId) {
                 displayResult('addContentResult', 'Invalid IMDB ID format. Please use format like tt0111161.', true);
                 return;
