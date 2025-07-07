@@ -499,6 +499,31 @@ async function addContentToGroup(groupId, contentId) {
     }
 }
 
+function extractContentId(input) {
+    if (!input) return null;
+
+    const trimmed = input.trim();
+
+    // IMDB ID - direct format like "tt1234567"
+    if (trimmed.match(/^tt\d+$/)) {
+        return { type: 'imdb', id: trimmed };
+    }
+
+    // IMDB URL - extract from URL
+    const imdbMatch = trimmed.match(/(?:imdb\.com\/title\/)?(tt\d+)/);
+    if (imdbMatch) {
+        return { type: 'imdb', id: imdbMatch[1] };
+    }
+
+    // Kitsu ID - support both direct ID and URL
+    const kitsuMatch = trimmed.match(/(?:kitsu\.io\/anime\/)?(\d+)/);
+    if (kitsuMatch) {
+        return { type: 'kitsu', id: kitsuMatch[1] };
+    }
+
+    return null;
+}
+
 // --- SOCKET.IO REAL-TIME LOGIC ---
 io.on('connection', (socket) => {
   console.log('A user connected via WebSocket:', socket.id);

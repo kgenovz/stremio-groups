@@ -385,6 +385,12 @@
             }
         };
 
+        const displayMovieInfo = (info) => {
+            currentContentInfo = info;
+            renderPreview(info);
+            addBtn.style.display = 'inline-block';
+        };
+
         // --- CORE LOGIC ---
         const showContentSection = (groupId, groupName, addonUrl, saveToSession = true) => {
             currentGroupId = groupId;
@@ -652,67 +658,60 @@
         });
 
         fetchInfoBtn.addEventListener('click', async () => {
-            const input = document.getElementById('imdbId').value;
-            const imdbId = extractContentId(input);
-            if (!imdbId) {
-                displayResult('addContentResult', 'Invalid IMDB ID format. Please use format like tt0111161.', true);
-                return;
-            }
+    const input = document.getElementById('contentId').value; // Changed from 'imdbId'
+    const parsedId = extractContentId(input); // Now returns object
+    
+    if (!parsedId) {
+        displayResult('addContentResult', 'Invalid format. Please use IMDB ID (tt0111161) or Kitsu ID (1234).', true);
+        return;
+    }
+    
+    try {
+        // Use the actual ID for the API call
+        const response = await fetch(`/api/content/info/${parsedId.id}`);
+        const data = await response.json();
+        
+        if (response.ok) {
+            displayMovieInfo(data);
+            displayResult('addContentResult', 'Content info loaded successfully!');
+        } else {
+            displayResult('addContentResult', data.error || 'Failed to fetch content info.', true);
+        }
+    } catch (error) {
+        console.error('Fetch error:', error);
+        displayResult('addContentResult', 'Network error occurred.', true);
+    }
+});
 
-            fetchInfoBtn.disabled = true;
-            fetchInfoBtn.textContent = 'Fetching...';
-            addBtn.style.display = 'none';
-            document.getElementById('contentPreview').style.display = 'none';
-
-            try {
-                const response = await fetch(`/api/content/info/${imdbId}`);
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.error);
-                
-                currentContentInfo = { imdbId, ...data };
-                renderPreview(data);
-                addBtn.style.display = 'inline-block';
-                displayResult('addContentResult', ''); // Clear previous results
-            } catch (error) {
-                displayResult('addContentResult', `Error: ${error.message}`, true);
-            } finally {
-                fetchInfoBtn.disabled = false;
-                fetchInfoBtn.textContent = 'Fetch Info';
-            }
-        });
 
         addContentForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!currentGroupId || !currentContentInfo) return;
-
-            addBtn.disabled = true;
-            addBtn.textContent = 'Adding...';
-
-            try {
-                const response = await fetch(`/api/groups/${currentGroupId}/content`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ imdbId: currentContentInfo.imdbId })
-                });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.error);
-                
-                displayResult('addContentResult', data.message, false);
-                loadContent(); // Manually reload for immediate feedback
-
-                // Reset form
-                addContentForm.reset();
-                document.getElementById('contentPreview').style.display = 'none';
-                addBtn.style.display = 'none';
-                currentContentInfo = null;
-
-            } catch (error) {
-                displayResult('addContentResult', `Error: ${error.message}`, true);
-            } finally {
-                addBtn.disabled = false;
-                addBtn.textContent = 'Add to Group';
-            }
+    e.preventDefault();
+    if (!currentGroupId || !currentContentInfo) return;
+    addBtn.disabled = true;
+    addBtn.textContent = 'Adding...';
+    try {
+        const response = await fetch(`/api/groups/${currentGroupId}/content`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contentId: currentContentInfo.originalId || currentContentInfo.imdbId }) // Changed from imdbId to contentId
         });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        
+        displayResult('addContentResult', data.message, false);
+        loadContent(); // Manually reload for immediate feedback
+        // Reset form
+        addContentForm.reset();
+        document.getElementById('contentPreview').style.display = 'none';
+        addBtn.style.display = 'none';
+        currentContentInfo = null;
+    } catch (error) {
+        displayResult('addContentResult', `Error: ${error.message}`, true);
+    } finally {
+        addBtn.disabled = false;
+        addBtn.textContent = 'Add to Group';
+    }
+});
 
         filterButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
