@@ -10,7 +10,7 @@ const Database = require('./db/database');
 
 // --- CONFIGURATION ---
 const port = process.env.PORT || 3000;
-const OMDB_API_KEY = process.env.OMDB_API_KEY || '4dd7471d'; // Replace with your own key
+const OMDB_API_KEY = process.env.OMDB_API_KEY || '4dd7471d'; // Hardcoded for development, **REPLACE IN PRODUCTION** 
 const OMDB_BASE_URL = 'http://www.omdbapi.com/';
 
 // --- INITIALIZATION ---
@@ -31,7 +31,7 @@ const io = new Server(server, {
           "https://app.strem.io", // Allow Stremio web app
           "https://web.stremio.com" // Allow Stremio web app
         ]
-      : "*", // In development, allow all origins
+            : "*", // Allow all origins in development
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -652,7 +652,7 @@ app.get('/api/groups/:id/content', async (req, res) => {
 // Add content to a group (from web interface)
 app.post('/api/groups/:id/content', async (req, res) => {
     try {
-        const { contentId } = req.body; // Changed from imdbId to contentId
+        const { contentId } = req.body; 
         const { id: groupId } = req.params;
 
         const parsedId = extractContentId(contentId);
@@ -782,7 +782,6 @@ app.delete('/api/groups/:groupId/content/:contentId', async (req, res) => {
 // --- STREMIO ADDON ROUTES ---
 
 // Stremio addon manifest
-// Replace your manifest route with this simplified version
 
 app.get('/:groupId/manifest.json', async (req, res) => {
   console.log('=== MANIFEST REQUEST START ===');
@@ -799,7 +798,7 @@ app.get('/:groupId/manifest.json', async (req, res) => {
 
     console.log('Group found:', group.name);
 
-    // ALWAYS show both catalogs - no dynamic behavior!
+    // ALWAYS show both catalogs
     const catalogs = [
       { id: 'shared-movies', type: 'movie', name: `${group.name} - Shared List` },
       { id: 'shared-series', type: 'series', name: `${group.name} - Shared List` }
@@ -807,7 +806,7 @@ app.get('/:groupId/manifest.json', async (req, res) => {
 
     const manifest = {
       id: `stremio.groups.${groupId}`,
-      version: '1.4.0', // Static version since catalogs never change
+      version: '1.0.0',
       name: `${group.name} - Group List`,
       description: `Shared movie and series catalog for the group: ${group.name}`,
       logo: `${req.protocol}://${req.get('host')}/logo.png`,
@@ -879,7 +878,7 @@ app.get('/:groupId/stream/:type/:id.json', async (req, res) => {
 
         console.log(`Raw ID from Stremio: "${id}"`);
 
-        // BETTER ID EXTRACTION - handle multiple formats
+        // ID Extraction logic
         let contentId;
 
         if (id.startsWith('kitsu:')) {
@@ -979,6 +978,7 @@ app.get('/api/groups/:groupId/add-from-stremio/:imdbId', async (req, res) => {
     }
 });
 
+// Success page after adding content
 app.get('/success/:groupId', async (req, res) => {
     try {
         const { groupId } = req.params;
@@ -1034,7 +1034,6 @@ app.get('/:groupId/catalog/:type/:catalogId.json', async (req, res) => {
     const { groupId, catalogId } = req.params;
     let contentType = null;
 
-    // Simple catalog logic - only movies and series
     if (catalogId === 'shared-movies') {
       contentType = 'movie';
     } else if (catalogId === 'shared-series') {
@@ -1060,7 +1059,7 @@ app.get('/:groupId/catalog/:type/:catalogId.json', async (req, res) => {
   }
 });
 
-// --- HEALTH CHECK FOR RAILWAY ---
+// --- HEALTH CHECK ---
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'healthy', 
@@ -1102,7 +1101,7 @@ async function startServer() {
   }
 }
 
-// Graceful shutdown
+// Shutdown
 process.on('SIGINT', async () => {
   console.log('SIGINT received. Shutting down gracefully...');
   await db.close();
