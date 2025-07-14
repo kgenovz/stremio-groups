@@ -1,3 +1,5 @@
+// server.js
+
 // --- REQUIRED MODULES ---
 const express = require('express');
 const cors = require('cors');
@@ -10,7 +12,7 @@ const Database = require('./db/database');
 
 // --- CONFIGURATION ---
 const port = process.env.PORT || 3000;
-const OMDB_API_KEY = process.env.OMDB_API_KEY || '4dd7471d'; // Hardcoded for development, **REPLACE IN PRODUCTION** 
+const OMDB_API_KEY = process.env.OMDB_API_KEY || 'a0da4838'; // Hardcoded for development, **REPLACE IN PRODUCTION** 
 const OMDB_BASE_URL = 'http://www.omdbapi.com/';
 
 // --- INITIALIZATION ---
@@ -685,6 +687,352 @@ app.post('/api/groups/:id/content', async (req, res) => {
     }
 });
 
+// Scan IMDB list for IDs only (fast)
+app.post('/api/imdb/scan', async (req, res) => {
+    try {
+        const { url } = req.body;
+        console.log('=== IMDB SCAN REQUEST ===');
+        console.log('URL:', url);
+
+        // Validate IMDB URL
+        if (!url || !url.includes('imdb.com')) {
+            return res.status(400).json({ error: 'Invalid IMDB URL. Please provide a valid IMDB list URL.' });
+        }
+
+        // Fetch the IMDB page
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch IMDB page: ${response.status} ${response.statusText}`);
+        }
+
+        const html = await response.text();
+        console.log('Fetched HTML length:', html.length);
+
+        // Extract just the IMDB IDs (fast)
+        const rawItems = extractImdbData(html, url);
+
+        if (rawItems.length === 0) {
+            return res.json({
+                items: [],
+                message: 'No movie or series items found on this page. Make sure the list is public and contains movies/TV shows.'
+            });
+        }
+
+        console.log(`Found ${rawItems.length} IMDB IDs (scan complete)`);
+
+        res.json({
+            items: rawItems,
+            total: rawItems.length,
+            source: url
+        });
+
+    } catch (error) {
+        console.error('=== IMDB SCAN ERROR ===');
+        console.error('Error details:', error.message);
+        res.status(500).json({ error: `Failed to scan IMDB list: ${error.message}` });
+    }
+});
+
+// Enrich IMDB items with detailed data
+app.post('/api/imdb/enrich', async (req, res) => {
+    try {
+        const { items, limit = '100' } = req.body;
+        console.log('=== IMDB ENRICH REQUEST ===');
+        console.log(`Enriching items, limit: ${limit}`);
+
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ error: 'No items provided for enrichment' });
+        }
+
+        // Determine how many items to process
+        let processCount;
+        if (limit === 'all') {
+            processCount = items.length;
+        } else {
+            processCount = Math.min(parseInt(limit), items.length);
+        }
+
+        const itemsToProcess = items.slice(0, processCount);
+        console.log(`Processing ${processCount} out of ${items.length} items`);
+
+        const enhancedItems = [];
+
+        for (let i = 0; i < itemsToProcess.length; i++) {
+            const item = itemsToProcess[i];
+
+            try {
+                // Log progress every 10 items
+                if (i % 10 === 0 || i === itemsToProcess.length - 1) {
+                    console.log(`🔄 Processing item ${i + 1}/${itemsToProcess.length} (${Math.round((i + 1) / itemsToProcess.length * 100)}%)`);
+                }
+
+                const omdbInfo = await fetchOMDBInfo(item.imdbId);
+
+                enhancedItems.push({
+                    title: omdbInfo.title,
+                    imdbId: item.imdbId,
+                    year: omdbInfo.year ? parseInt(omdbInfo.year) : null,
+                    type: omdbInfo.type,
+                    poster: omdbInfo.poster
+                });
+
+                // Small delay to avoid overwhelming OMDB API
+                const delay = itemsToProcess.length > 100 ? 100 : 50;
+                await new Promise(resolve => setTimeout(resolve, delay));
+
+            } catch (error) {
+                console.log(`❌ Failed to enhance ${item.imdbId}: ${error.message}`);
+                // Skip items that can't be enhanced
+            }
+        }
+
+        console.log(`Successfully enhanced ${enhancedItems.length} items`);
+
+        res.json({
+            items: enhancedItems,
+            total: enhancedItems.length,
+            processed: processCount,
+            available: items.length
+        });
+
+    } catch (error) {
+        console.error('=== IMDB ENRICH ERROR ===');
+        console.error('Error details:', error.message);
+        res.status(500).json({ error: `Failed to enrich IMDB items: ${error.message}` });
+    }
+});
+
+// Scrape IMDB list and extract movie/series data
+app.post('/api/imdb/scrape', async (req, res) => {
+    try {
+        const { url, limit = '250' } = req.body;
+        console.log('=== IMDB SCRAPE REQUEST ===');
+        console.log('URL:', url);
+
+        // Validate IMDB URL
+        if (!url || !url.includes('imdb.com')) {
+            return res.status(400).json({ error: 'Invalid IMDB URL. Please provide a valid IMDB list URL.' });
+        }
+
+        // Fetch the IMDB page
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch IMDB page: ${response.status} ${response.statusText}`);
+        }
+
+        const html = await response.text();
+        console.log('Fetched HTML length:', html.length);
+
+        // Extract IMDB IDs from HTML
+        const rawItems = extractImdbData(html, url);
+
+        if (rawItems.length === 0) {
+            return res.json({
+                items: [],
+                message: 'No movie or series items found on this page. Make sure the list is public and contains movies/TV shows.'
+            });
+        }
+
+        console.log(`Found ${rawItems.length} IMDB IDs, now enhancing with OMDB data...`);
+
+
+        // Determine how many items to process
+        let processCount;
+        if (limit === 'all') {
+            processCount = rawItems.length;
+        } else {
+            processCount = Math.min(parseInt(limit), rawItems.length);
+        }
+
+        const itemsToProcess = rawItems.slice(0, processCount);
+        console.log(`Processing ${processCount} out of ${rawItems.length} found items`);
+        const enhancedItems = [];
+
+        for (let i = 0; i < itemsToProcess.length; i++) {
+            const item = itemsToProcess[i];
+
+            try {
+                // Log progress every 10 items
+                if (i % 10 === 0 || i === itemsToProcess.length - 1) {
+                    console.log(`🔄 Processing item ${i + 1}/${itemsToProcess.length} (${Math.round((i + 1) / itemsToProcess.length * 100)}%)`);
+                }
+
+                const omdbInfo = await fetchOMDBInfo(item.imdbId);
+
+                enhancedItems.push({
+                    title: omdbInfo.title,
+                    imdbId: item.imdbId,
+                    year: omdbInfo.year ? parseInt(omdbInfo.year) : null,
+                    type: omdbInfo.type,
+                    poster: omdbInfo.poster
+                });
+
+                // Small delay to avoid overwhelming OMDB API (increase for larger batches)
+                const delay = itemsToProcess.length > 100 ? 100 : 50;
+                await new Promise(resolve => setTimeout(resolve, delay));
+
+            } catch (error) {
+                console.log(`❌ Failed to enhance ${item.imdbId}: ${error.message}`);
+                // Skip items that can't be enhanced
+            }
+        }
+
+        console.log(`Successfully enhanced ${enhancedItems.length} items`);
+
+        res.json({
+            items: enhancedItems,
+            total: enhancedItems.length,
+            source: url,
+            totalFound: rawItems.length,
+            processed: itemsToProcess.length
+        });
+
+    } catch (error) {
+        console.error('=== IMDB SCRAPE ERROR ===');
+        console.error('Error details:', error.message);
+        res.status(500).json({ error: `Failed to scrape IMDB list: ${error.message}` });
+    }
+});
+
+
+// Helper function to extract IMDB data from HTML
+function extractImdbData(html, sourceUrl) {
+    try {
+        console.log('Starting HTML parsing...');
+
+        // Extract all unique IMDB IDs
+        const titlePattern = /\/title\/(tt\d+)/g;
+        const foundIds = new Set();
+        let match;
+
+        while ((match = titlePattern.exec(html)) !== null) {
+            foundIds.add(match[1]);
+        }
+
+        console.log(`Found ${foundIds.size} unique IMDB IDs`);
+
+        // Convert to array and return as basic items
+        // We'll enhance them with real data in a separate step
+        const items = Array.from(foundIds).map(imdbId => ({
+            title: null, // Will be populated by OMDB
+            imdbId: imdbId,
+            year: null,
+            type: null,
+            poster: null
+        }));
+
+        console.log(`Returning ${items.length} items for enhancement`);
+        return items; // Remove the .slice(0, 50) limit
+
+    } catch (error) {
+        console.error('Error parsing IMDB HTML:', error);
+        return [];
+    }
+}
+
+// Helper function to enhance an item with additional details from the HTML
+function enhanceItemWithDetails(html, item) {
+    try {
+        // Look for more context around this specific IMDB ID
+        const contextPattern = new RegExp(`/title/${item.imdbId}/[^"]*"[^>]*>([^<]+)</[^>]*>([\\s\\S]{0,500})`, 'g');
+        let contextMatch;
+
+        while ((contextMatch = contextPattern.exec(html)) !== null) {
+            const context = contextMatch[2];
+
+            // Try to find year in the context
+            if (!item.year) {
+                const yearMatch = context.match(/\((\d{4})\)/);
+                if (yearMatch) {
+                    const year = parseInt(yearMatch[1]);
+                    if (year >= 1900 && year <= new Date().getFullYear() + 2) {
+                        item.year = year;
+                    }
+                }
+            }
+
+            // Try to determine type from context
+            if (!item.type) {
+                const lowerContext = context.toLowerCase();
+                if (lowerContext.includes('tv series') ||
+                    lowerContext.includes('tv mini') ||
+                    lowerContext.includes('tv show') ||
+                    lowerContext.includes('"series"')) {
+                    item.type = 'series';
+                } else if (lowerContext.includes('movie') ||
+                    lowerContext.includes('film') ||
+                    lowerContext.includes('"movie"')) {
+                    item.type = 'movie';
+                }
+            }
+
+            // If we found both year and type, we can stop looking
+            if (item.year && item.type) break;
+        }
+
+        return item;
+
+    } catch (error) {
+        console.error('Error enhancing item:', error);
+        return item; // Return the basic item even if enhancement fails
+    }
+}
+
+// Search for movies/series by name using OMDB
+app.get('/api/content/search/:query', async (req, res) => {
+    try {
+        const { query } = req.params;
+
+        if (!query || query.trim().length < 2) {
+            return res.status(400).json({ error: 'Search query must be at least 2 characters long.' });
+        }
+
+        const searchUrl = `${OMDB_BASE_URL}?s=${encodeURIComponent(query.trim())}&apikey=${OMDB_API_KEY}`;
+        console.log('OMDB Search URL:', searchUrl);
+
+        const response = await fetch(searchUrl);
+        const data = await response.json();
+
+        if (data.Response === 'False') {
+            return res.json({ results: [], message: data.Error || 'No results found' });
+        }
+
+        // Format the results
+        const results = data.Search.map(item => ({
+            imdbId: item.imdbID,
+            title: item.Title,
+            year: item.Year,
+            type: item.Type === 'series' ? 'series' : 'movie',
+            poster: item.Poster !== 'N/A' ? item.Poster : null
+        }));
+
+        res.json({ results, total: data.totalResults });
+
+    } catch (error) {
+        console.error('Error searching OMDB:', error);
+        res.status(500).json({ error: 'Failed to search for content' });
+    }
+});
 
 // Fetch movie/series info from OMDB (proxy for web UI)
 app.get('/api/content/info/:contentId', async (req, res) => {

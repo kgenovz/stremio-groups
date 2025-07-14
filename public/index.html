@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stremio Groups - Shared Movie Catalogs</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -16,68 +21,250 @@
             align-items: flex-start;
             padding: 2rem 1rem;
         }
-        .container { max-width: 800px; width: 100%; }
-        .header { text-align: center; margin-bottom: 2rem; color: white; }
-        .header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
-        .header p { font-size: 1.1rem; opacity: 0.9; }
-        .card { background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .form-group { margin-bottom: 1.5rem; }
-        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #555; }
-        input[type="text"], input[type="password"] {
-            width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;
+
+        .container {
+            max-width: 800px;
+            width: 100%;
         }
-        input:focus { outline: none; border-color: #667eea; }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: white;
+        }
+
+            .header h1 {
+                font-size: 2.5rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .header p {
+                font-size: 1.1rem;
+                opacity: 0.9;
+            }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
         button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-size: 1rem;
-            font-weight: 600; cursor: pointer; transition: all 0.2s;
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        button:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
-        .result { margin-top: 1rem; padding: 1rem; border-radius: 8px; background: #f0fdf4; border-left: 4px solid #28a745; }
-        .error { border-left-color: #dc3545; background: #f8d7da; color: #721c24; }
-        .addon-url { font-family: monospace; background: #e9ecef; padding: 0.5rem; border-radius: 4px; word-break: break-all; margin: 0.5rem 0; }
-        .auth-section { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
-        .content-section { display: none; }
-        .filter-btn-group { display: flex; gap: 1rem; margin-bottom: 1rem; }
-        .filter-btn { background: #f8f9fa; color: #495057; border: 2px solid #e0e0e0; padding: 0.5rem 1rem; }
-        .filter-btn:hover, .filter-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-color: #667eea; }
-        .content-item { display: flex; align-items: flex-start; padding: 1rem; border-bottom: 1px solid #eee; position: relative; }
-        .content-item:last-child { border-bottom: none; }
-        .content-item:hover { background: #f8f9fa; }
-        .content-poster { width: 60px; height: 90px; object-fit: cover; border-radius: 4px; margin-right: 1rem; flex-shrink: 0; }
-        .content-info { flex: 1; }
-        .content-info h4 { margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-        .content-type { background: #667eea; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; }
-        .content-type.series { background: #28a745; }
-        .delete-btn { 
-            background: #dc3545; 
-            color: white; 
-            border: none; 
-            padding: 0.5rem; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-size: 0.8rem; 
+
+            button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            }
+
+            button:disabled {
+                background: #ccc;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+        .result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            background: #f0fdf4;
+            border-left: 4px solid #28a745;
+        }
+
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .addon-url {
+            font-family: monospace;
+            background: #e9ecef;
+            padding: 0.5rem;
+            border-radius: 4px;
+            word-break: break-all;
+            margin: 0.5rem 0;
+        }
+
+        .auth-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .filter-btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-btn {
+            background: #f8f9fa;
+            color: #495057;
+            border: 2px solid #e0e0e0;
+            padding: 0.5rem 1rem;
+        }
+
+            .filter-btn:hover, .filter-btn.active {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-color: #667eea;
+            }
+
+        .content-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            position: relative;
+        }
+
+            .content-item:last-child {
+                border-bottom: none;
+            }
+
+            .content-item:hover {
+                background: #f8f9fa;
+            }
+
+        .content-poster {
+            width: 60px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .content-info {
+            flex: 1;
+        }
+
+            .content-info h4 {
+                margin-bottom: 0.25rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+
+        .content-type {
+            background: #667eea;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+            .content-type.series {
+                background: #28a745;
+            }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
             margin-left: 1rem;
             align-self: flex-start;
             transition: all 0.2s;
             min-width: 70px;
         }
-        .delete-btn:hover { 
-            background: #c82333; 
-            transform: translateY(-1px);
+
+            .delete-btn:hover {
+                background: #c82333;
+                transform: translateY(-1px);
+            }
+
+            .delete-btn:disabled {
+                background: #6c757d;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+        .preview-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
-        .delete-btn:disabled {
-            background: #6c757d;
-            cursor: not-allowed;
-            transform: none;
+
+        .preview-poster {
+            width: 80px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 6px;
         }
-        .preview-item { display: flex; align-items: center; gap: 1rem; }
-        .preview-poster { width: 80px; height: 120px; object-fit: cover; border-radius: 6px; }
-        .preview-info h5 { margin: 0 0 0.5rem 0; color: #333; }
-        .preview-info p { margin: 0.25rem 0; color: #666; font-size: 0.9rem; }
-        .type-badge { display: inline-block; background: #667eea; color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem; text-transform: uppercase; font-weight: bold; }
-        .type-badge.series { background: #28a745; }
+
+        .preview-info h5 {
+            margin: 0 0 0.5rem 0;
+            color: #333;
+        }
+
+        .preview-info p {
+            margin: 0.25rem 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .type-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+            .type-badge.series {
+                background: #28a745;
+            }
 
         /* New styles for Group ID display */
         .group-id-header {
@@ -89,11 +276,13 @@
             margin-bottom: 2rem;
             box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
         }
-        .group-id-header h1 {
-            font-size: 2.2rem;
-            margin-bottom: 0.5rem;
-            font-weight: 700;
-        }
+
+            .group-id-header h1 {
+                font-size: 2.2rem;
+                margin-bottom: 0.5rem;
+                font-weight: 700;
+            }
+
         .group-id-display {
             background: rgba(255, 255, 255, 0.2);
             border: 2px solid rgba(255, 255, 255, 0.3);
@@ -102,6 +291,7 @@
             margin: 1rem 0;
             backdrop-filter: blur(10px);
         }
+
         .group-id-label {
             font-size: 1rem;
             opacity: 0.9;
@@ -110,6 +300,7 @@
             letter-spacing: 1px;
             font-weight: 600;
         }
+
         .group-id-value {
             font-size: 3rem;
             font-weight: 900;
@@ -119,16 +310,19 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .group-id-value:hover {
-            transform: scale(1.05);
-            text-shadow: 0 4px 8px rgba(0,0,0,0.4);
-        }
+
+            .group-id-value:hover {
+                transform: scale(1.05);
+                text-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            }
+
         .copy-notice {
             font-size: 0.9rem;
             opacity: 0.8;
             margin-top: 0.5rem;
             font-style: italic;
         }
+
         .copied-feedback {
             background: rgba(40, 167, 69, 0.9);
             color: white;
@@ -139,9 +333,10 @@
             opacity: 0;
             transition: opacity 0.3s;
         }
-        .copied-feedback.show {
-            opacity: 1;
-        }
+
+            .copied-feedback.show {
+                opacity: 1;
+            }
 
         /* New styles for addon URL section */
         .addon-url-container {
@@ -151,10 +346,12 @@
             margin: 0.5rem 0 1rem 0;
             flex-wrap: wrap;
         }
+
         .addon-url {
             flex: 1;
             min-width: 300px;
         }
+
         .copy-addon-btn {
             background: #28a745;
             color: white;
@@ -167,23 +364,481 @@
             transition: all 0.2s;
             white-space: nowrap;
         }
-        .copy-addon-btn:hover {
-            background: #218838;
-            transform: translateY(-1px);
+
+            .copy-addon-btn:hover {
+                background: #218838;
+                transform: translateY(-1px);
+            }
+
+            .copy-addon-btn:disabled {
+                background: #6c757d;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+        @media (max-width: 768px) {
+            .auth-section {
+                grid-template-columns: 1fr;
+            }
+
+            .group-id-value {
+                font-size: 2.2rem;
+                letter-spacing: 2px;
+            }
+
+            .group-id-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .addon-url-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .addon-url {
+                min-width: unset;
+            }
         }
-        .copy-addon-btn:disabled {
-            background: #6c757d;
-            cursor: not-allowed;
-            transform: none;
+
+        /* Search Results Styles */
+        .search-results-header {
+            padding: 1rem;
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            border-radius: 8px 8px 0 0;
+            margin: 0;
+        }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+            .search-result-item:hover {
+                background: #f0f8ff;
+            }
+
+            .search-result-item:last-child {
+                border-bottom: none;
+                border-radius: 0 0 8px 8px;
+            }
+
+        .search-result-poster {
+            width: 50px;
+            height: 75px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .search-result-info {
+            flex: 1;
+        }
+
+        .search-result-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: #333;
+        }
+
+        .search-result-details {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.25rem;
+        }
+
+        .search-result-type {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+            .search-result-type.series {
+                background: #28a745;
+            }
+
+        .no-results {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* Batch Upload Styles */
+        .batch-upload-section {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 0;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .upload-method-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .upload-tab {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+        }
+
+            .upload-tab:hover {
+                background: #e9ecef;
+            }
+
+            .upload-tab.active {
+                background: white;
+                border-bottom-color: #667eea;
+                color: #667eea;
+            }
+
+        .upload-method-content {
+            padding: 1.5rem;
+        }
+
+            .upload-method-content.active {
+                display: block;
+            }
+
+        .file-upload-area {
+            margin: 1rem 0;
+        }
+
+        .file-drop-zone {
+            border: 3px dashed #d0d7de;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+            .file-drop-zone:hover {
+                border-color: #667eea;
+                background: #f0f8ff;
+            }
+
+            .file-drop-zone.dragover {
+                border-color: #667eea;
+                background: #e6f3ff;
+                transform: scale(1.02);
+            }
+
+        .file-drop-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .file-drop-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-drop-hint {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .file-preview-container {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #28a745;
+        }
+
+        .file-info-text {
+            flex: 1;
+        }
+
+        .file-info h4 {
+            margin: 0 0 0.25rem 0;
+            color: #333;
+        }
+
+        .file-info p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .preview-table {
+            max-height: 300px;
+            overflow: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background: white;
+        }
+
+            .preview-table table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 0.9rem;
+            }
+
+            .preview-table th {
+                background: #667eea;
+                color: white;
+                padding: 0.75rem;
+                text-align: left;
+                font-weight: 600;
+                position: sticky;
+                top: 0;
+                z-index: 1;
+            }
+
+            .preview-table td {
+                padding: 0.75rem;
+                border-bottom: 1px solid #e0e0e0;
+            }
+
+            .preview-table tr:hover {
+                background: #f8f9fa;
+            }
+
+        .column-mapping {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+        }
+
+            .column-mapping h5 {
+                margin: 0 0 1rem 0;
+                color: #856404;
+            }
+
+        .mapping-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+            .mapping-row label {
+                min-width: 100px;
+                font-weight: 600;
+            }
+
+            .mapping-row select {
+                flex: 1;
+                padding: 0.5rem;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+
+        .batch-progress {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .batch-results-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .result-stat {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+        }
+
+            .result-stat.success {
+                background: #28a745;
+            }
+
+            .result-stat.warning {
+                background: #ffc107;
+                color: #333;
+            }
+
+            .result-stat.error {
+                background: #dc3545;
+            }
+
+            .result-stat.info {
+                background: #17a2b8;
+            }
+
+            .result-stat .number {
+                font-size: 2rem;
+                font-weight: 900;
+                display: block;
+            }
+
+            .result-stat .label {
+                font-size: 0.9rem;
+                opacity: 0.9;
+            }
+
+        .batch-details {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background: white;
+        }
+
+        .batch-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+            .batch-item:last-child {
+                border-bottom: none;
+            }
+
+        .batch-item-status {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+        }
+
+            .batch-item-status.success {
+                background: #28a745;
+            }
+
+            .batch-item-status.error {
+                background: #dc3545;
+            }
+
+            .batch-item-status.warning {
+                background: #ffc107;
+                color: #333;
+            }
+
+        .batch-item-info {
+            flex: 1;
+        }
+
+        .batch-item-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .batch-item-details {
+            font-size: 0.9rem;
+            color: #666;
         }
 
         @media (max-width: 768px) {
-            .auth-section { grid-template-columns: 1fr; }
-            .group-id-value { font-size: 2.2rem; letter-spacing: 2px; }
-            .group-id-header h1 { font-size: 1.8rem; }
-            .addon-url-container { flex-direction: column; align-items: stretch; }
-            .addon-url { min-width: unset; }
+            .upload-method-tabs {
+                flex-direction: column;
+            }
+
+            .mapping-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+                .mapping-row label {
+                    min-width: unset;
+                }
+
+            .batch-results-summary {
+                grid-template-columns: 1fr 1fr;
+            }
         }
+
+        /* Prominent Add to Group Button */
+        .add-to-group-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+            color: white !important;
+            border: none !important;
+            padding: 1rem 2rem !important;
+            border-radius: 8px !important;
+            font-size: 1.1rem !important;
+            font-weight: 700 !important;
+            cursor: pointer !important;
+            transition: all 0.2s !important;
+            margin-top: 1rem !important;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3) !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+        }
+
+            .add-to-group-btn:hover {
+                transform: translateY(-2px) !important;
+                box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4) !important;
+                background: linear-gradient(135deg, #218838 0%, #1ea080 100%) !important;
+            }
+
+            .add-to-group-btn:disabled {
+                background: #6c757d !important;
+                cursor: not-allowed !important;
+                transform: none !important;
+                box-shadow: none !important;
+            }
+
+                .add-to-group-btn:disabled:hover {
+                    transform: none !important;
+                }
     </style>
 </head>
 <body>
@@ -239,31 +894,169 @@
                 <p style="color: #666; font-size: 0.9rem; margin: 0.5rem 0 1rem 0;">Install the addon in Stremio to see the shared catalog and to add content directly from the Stremio app.</p>
 
                 <h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #555;">Find Movie/Series to Add</h3>
-                
+
                 <form id="addContentForm">
                     <div class="form-group">
-                        <label for="contentId">IMDB ID, Kitsu ID, or URL</label>
-                        <input type="text" id="contentId" placeholder="tt0111161, 1234, or https://kitsu.io/anime/1234" required>
+                        <label for="contentId">Search by Name or Enter IMDB/Kitsu ID/IMDB URL</label>
+                        <input type="text" id="contentId" placeholder="The Shawshank Redemption, tt0111161, or 1234" required>
                     </div>
                     <div style="display: flex; gap: 1rem; align-items: center;">
-                        <button type="button" id="fetchInfoBtn">Fetch Info</button>
-                        <button type="submit" id="addBtn" style="display: none;">Add to Group</button>
+                        <button type="button" id="searchBtn">Search</button>
                     </div>
                 </form>
                 <div id="addContentResult" style="margin-top: 1rem;"></div>
+                <div id="searchResults" style="display: none; margin-top: 1rem; max-height: 400px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 8px; background: #f8f9fa;"></div>
                 <div id="contentPreview" style="display: none; margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea;"></div>
-            </div>
 
-            <div class="card">
-                <h3>Current Content in Group</h3>
-                <div class="filter-btn-group">
-                    <button data-filter="all" class="filter-btn active">All</button>
-                    <button data-filter="movie" class="filter-btn">Movies</button>
-                    <button data-filter="series" class="filter-btn">TV Series</button>
-                </div>
-                <div id="contentList"><p>Loading content...</p></div>
+                <h3 style="margin-top: 3rem; margin-bottom: 1rem; color: #555; border-top: 2px solid #e0e0e0; padding-top: 2rem;">Batch Add Content</h3>
+
+                <div class="batch-upload-section">
+                    <div class="upload-method-tabs">
+                        <button type="button" class="upload-tab active" data-method="spreadsheet">📊 Spreadsheet</button>
+                        <button type="button" class="upload-tab" data-method="json">📄 JSON File</button>
+                        <button type="button" class="upload-tab" data-method="imdb">🎬 IMDB List</button>
+                    </div>
+
+                    <!-- Spreadsheet Upload -->
+                    <div id="spreadsheetUpload" class="upload-method-content active">
+                        <p style="color: #666; margin-bottom: 1rem;">Upload an Excel (.xlsx) or CSV file with movie/series data. Required columns: <strong>Title</strong>, <strong>Year</strong> (optional), <strong>IMDB_ID</strong> (optional).</p>
+                        <div class="file-upload-area" id="fileUploadArea">
+                            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display: none;">
+                            <div class="file-drop-zone" onclick="document.getElementById('fileInput').click()">
+                                <div class="file-drop-icon">📁</div>
+                                <div class="file-drop-text">Click to select file or drag & drop</div>
+                                <div class="file-drop-hint">Supports .xlsx, .xls, .csv files</div>
+                            </div>
+                        </div>
+                        <div id="filePreview" style="display: none; margin-top: 1rem;"></div>
+                        <button type="button" id="processBatchBtn" style="display: none; margin-top: 1rem;">Process Batch Upload</button>
+                    </div>
+
+                    <!-- JSON Upload -->
+                    <div id="jsonUpload" class="upload-method-content" style="display: none;">
+                        <p style="color: #666; margin-bottom: 1rem;">Upload a JSON file with movie/series data. Supports multiple formats including exports from movie databases, watchlists, and custom formats.</p>
+
+                        <div class="json-format-examples" style="margin-bottom: 1.5rem;">
+                            <details style="margin-bottom: 1rem;">
+                                <summary style="cursor: pointer; font-weight: 600; color: #667eea; margin-bottom: 0.5rem;">📋 Supported JSON Formats</summary>
+                                <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-family: monospace; font-size: 0.9rem;">
+                                    <p style="margin-bottom: 1rem;"><strong>Array of objects:</strong></p>
+                                    <pre style="margin: 0 0 1rem 0; overflow-x: auto;">[
+  {
+    "title": "The Shawshank Redemption",
+    "year": 1994,
+    "imdbId": "tt0111161",
+    "type": "movie"
+  },
+  {
+    "title": "Breaking Bad",
+    "year": 2008,
+    "imdbId": "tt0903747",
+    "type": "series"
+  }
+]</pre>
+                                    <p style="margin-bottom: 1rem;"><strong>Nested structure (auto-detected):</strong></p>
+                                    <pre style="margin: 0; overflow-x: auto;">{
+  "movies": [
+    {"title": "Inception", "year": 2010, "imdbId": "tt1375666"}
+  ],
+  "watchlist": [
+    {"name": "The Matrix", "releaseYear": 1999}
+  ]
+}</pre>
+                                </div>
+                            </details>
+                        </div>
+
+                        <div class="file-upload-area" id="jsonFileUploadArea">
+                            <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+                            <div class="file-drop-zone" onclick="document.getElementById('jsonFileInput').click()">
+                                <div class="file-drop-icon">📄</div>
+                                <div class="file-drop-text">Click to select JSON file or drag & drop</div>
+                                <div class="file-drop-hint">Supports .json files</div>
+                            </div>
+                        </div>
+
+                        <div id="jsonFilePreview" style="display: none; margin-top: 1rem;"></div>
+                        <button type="button" id="processJsonBtn" style="display: none; margin-top: 1rem;">Process JSON Upload</button>
+                    </div>
+
+                    <!-- IMDB List Import -->
+                    <div id="imdbUpload" class="upload-method-content" style="display: none;">
+                        <p style="color: #666; margin-bottom: 1rem;">Import movies and series from public IMDB lists, watchlists, or search results. Simply paste the IMDB URL and we'll extract all the content.</p>
+
+                        <div class="imdb-examples" style="margin-bottom: 1.5rem;">
+                            <details style="margin-bottom: 1rem;">
+                                <summary style="cursor: pointer; font-weight: 600; color: #667eea; margin-bottom: 0.5rem;">📋 Supported IMDB URLs</summary>
+                                <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.9rem;">
+                                    <p style="margin-bottom: 0.5rem;"><strong>✅ Supported formats:</strong></p>
+                                    <ul style="margin: 0 0 1rem 1.5rem; line-height: 1.6;">
+                                        <li><code>https://www.imdb.com/list/ls123456789/</code> - Custom lists</li>
+                                        <li><code>https://www.imdb.com/user/ur12345678/watchlist</code> - User watchlists</li>
+                                        <li><code>https://www.imdb.com/search/title/?genres=action</code> - Search results</li>
+                                        <li><code>https://www.imdb.com/chart/top</code> - Top 250 movies</li>
+                                    </ul>
+                                    <p style="margin: 0; color: #856404; font-size: 0.85rem;"><strong>Note:</strong> Only public lists can be imported. Private lists require the owner to make them public first.</p>
+                                </div>
+                            </details>
+                        </div>
+
+                        <form id="imdbUrlForm">
+                            <div class="form-group">
+                                <label for="imdbUrl">IMDB List URL</label>
+                                <input type="url" id="imdbUrl" placeholder="https://www.imdb.com/list/ls123456789/" required>
+                            </div>
+
+                            <div id="imdbProcessingOptions" style="display: none; margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #17a2b8;">
+                                <h5 style="margin: 0 0 1rem 0; color: #17a2b8;">⚙️ Processing Options</h5>
+                                <div style="margin-bottom: 1rem;">
+                                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span>Fetch detailed info for:</span>
+                                        <select id="imdbProcessLimit" style="margin-left: 0.5rem; padding: 0.25rem; border: 1px solid #ddd; border-radius: 4px;">
+                                            <option value="25">First 25 items</option>
+                                            <option value="50">First 50 items</option>
+                                            <option value="100" selected>First 100 items</option>
+                                            <option value="250">First 250 items</option>
+                                            <option value="all">All items (may be very slow)</option>
+                                        </select>
+                                    </label>
+                                </div>
+                                <div style="color: #666; font-size: 0.85rem;">
+                                    <p style="margin: 0 0 0.5rem 0;">💡 <strong>Expected processing time:</strong></p>
+                                    <ul style="margin: 0 0 0.5rem 1rem; line-height: 1.4;">
+                                        <li>25 items: ~3-5 seconds</li>
+                                        <li>50 items: ~5-10 seconds</li>
+                                        <li>100 items: ~10-20 seconds</li>
+                                        <li>250 items: ~30-60 seconds</li>
+                                        <li>All items: Several minutes</li>
+                                    </ul>
+                                    <p style="margin: 0;"><em>Each item requires a separate API lookup for titles, posters, and details.</em></p>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <button type="button" id="fetchImdbBtn">Scan IMDB List</button>
+                                <button type="button" id="processImdbBtn" style="display: none;">Fetch Detailed Info</button>
+                            </div>
+                        </form>
+
+                        <div id="imdbFetchResult" style="margin-top: 1rem;"></div>
+                        <div id="imdbListPreview" style="display: none; margin-top: 1rem;"></div>
+                        <div id="batchResults" style="display: none; margin-top: 1rem;"></div>
+                    </div>
             </div>
         </div>
+
+        <div class="card">
+            <h3>Current Content in Group</h3>
+            <div class="filter-btn-group">
+                <button data-filter="all" class="filter-btn active">All</button>
+                <button data-filter="movie" class="filter-btn">Movies</button>
+                <button data-filter="series" class="filter-btn">TV Series</button>
+            </div>
+            <div id="contentList"><p>Loading content...</p></div>
+        </div>
+    </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -301,7 +1094,7 @@
                 const groupId = localStorage.getItem(SESSION_KEYS.GROUP_ID);
                 const groupName = localStorage.getItem(SESSION_KEYS.GROUP_NAME);
                 const addonUrl = localStorage.getItem(SESSION_KEYS.ADDON_URL);
-                
+
                 if (groupId && groupName && addonUrl) {
                     console.log('Found existing session, restoring...');
                     return { groupId, groupName, addonUrl };
@@ -334,7 +1127,8 @@
         const createForm = document.getElementById('createForm');
         const joinForm = document.getElementById('joinForm');
         const addContentForm = document.getElementById('addContentForm');
-        const fetchInfoBtn = document.getElementById('fetchInfoBtn');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchResults = document.getElementById('searchResults');
         const addBtn = document.getElementById('addBtn');
         const filterButtons = document.querySelectorAll('.filter-btn');
         const copiedFeedback = document.getElementById('copiedFeedback');
@@ -388,7 +1182,6 @@
         const displayMovieInfo = (info) => {
             currentContentInfo = info;
             renderPreview(info);
-            addBtn.style.display = 'inline-block';
         };
 
         // --- CORE LOGIC ---
@@ -400,7 +1193,7 @@
             groupTitle.textContent = `Group: ${groupName}`;
             groupIdDisplay.textContent = groupId;
             addonUrlResult.textContent = addonUrl;
-            
+
             authSection.style.display = 'none';
             contentSection.style.display = 'block';
 
@@ -426,7 +1219,7 @@
                 console.log('Real-time update received:', newItem);
                 displayResult('addContentResult', `"${newItem.title}" was added to the group by someone!`, false);
                 // We can make this smarter by checking the current filter before reloading everything
-                loadContent(); 
+                loadContent();
             });
 
             socket.on('content-deleted', (deletedItem) => {
@@ -447,7 +1240,7 @@
                 const url = `/api/groups/${currentGroupId}/content${currentFilter !== 'all' ? `?type=${currentFilter}` : ''}`;
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('Failed to fetch content.');
-                
+
                 const content = await response.json();
                 renderContent(content);
             } catch (error) {
@@ -462,33 +1255,37 @@
                 return;
             }
             contentList.innerHTML = content.map(item => `
-                <div class="content-item" data-imdb-id="${item.imdb_id}" data-content-id="${item.id}">
-                    <img class="content-poster" src="${item.poster_url || 'https://via.placeholder.com/60x90.png?text=No+Poster'}" alt="Poster for ${item.title}">
-                    <div class="content-info">
-                        <h4>${item.title} <span class="content-type ${item.type}">${item.type}</span></h4>
-                        <p><strong>IMDB:</strong> ${item.imdb_id}</p>
-                        <p><strong>Added:</strong> ${new Date(item.added_at).toLocaleDateString()}</p>
-                        ${item.genres ? `<p><strong>Genres:</strong> ${item.genres.replace(/,/g, ', ')}</p>` : ''}
-                    </div>
-                    <button class="delete-btn" onclick="deleteContent(${item.id}, '${item.title}')">
-                        🗑️ Delete
-                    </button>
-                </div>
-            `).join('');
+                        <div class="content-item" data-imdb-id="${item.imdb_id}" data-content-id="${item.id}">
+                            <img class="content-poster" src="${item.poster_url || 'https://via.placeholder.com/60x90.png?text=No+Poster'}" alt="Poster for ${item.title}">
+                            <div class="content-info">
+                                <h4>${item.title} <span class="content-type ${item.type}">${item.type}</span></h4>
+                                <p><strong>IMDB:</strong> ${item.imdb_id}</p>
+                                <p><strong>Added:</strong> ${new Date(item.added_at).toLocaleDateString()}</p>
+                                ${item.genres ? `<p><strong>Genres:</strong> ${item.genres.replace(/,/g, ', ')}</p>` : ''}
+                            </div>
+                            <button class="delete-btn" onclick="deleteContent(${item.id}, '${item.title}')">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    `).join('');
         };
-        
+
         const renderPreview = (info) => {
             const previewContainer = document.getElementById('contentPreview');
             previewContainer.innerHTML = `
-                <div class="preview-item">
-                    <img src="${info.poster || 'https://via.placeholder.com/80x120.png?text=N/A'}" alt="Poster" class="preview-poster">
-                    <div class="preview-info">
-                        <h5>${info.title} (${info.year})</h5>
-                        <p><span class="type-badge ${info.type}">${info.type}</span></p>
-                        ${info.genres ? `<p><strong>Genres:</strong> ${info.genres}</p>` : ''}
-                        ${info.plot ? `<p><strong>Plot:</strong> ${info.plot}</p>` : ''}
-                    </div>
-                </div>`;
+        <div class="preview-item">
+            <img src="${info.poster || 'https://via.placeholder.com/80x120.png?text=N/A'}" alt="Poster" class="preview-poster">
+            <div class="preview-info">
+                <h5>${info.title} (${info.year})</h5>
+                <p><span class="type-badge ${info.type}">${info.type}</span></p>
+                ${info.genres ? `<p><strong>Genres:</strong> ${info.genres}</p>` : ''}
+                ${info.plot ? `<p><strong>Plot:</strong> ${info.plot}</p>` : ''}
+                ${info.imdbRating ? `<p><strong>IMDB Rating:</strong> ${info.imdbRating}/10</p>` : ''}
+            </div>
+        </div>
+        <button type="submit" form="addContentForm" class="add-to-group-btn" id="addBtn">
+            ✨ Add "${info.title}" to Group
+        </button>`;
             previewContainer.style.display = 'block';
         };
 
@@ -518,7 +1315,7 @@
             } catch (error) {
                 console.error('Error deleting content:', error);
                 displayResult('addContentResult', `Error: ${error.message}`, true);
-                
+
                 // Re-enable button on error
                 if (deleteBtn) {
                     deleteBtn.disabled = false;
@@ -531,34 +1328,34 @@
         const logout = () => {
             if (confirm('Are you sure you want to leave this group?')) {
                 clearSession();
-                
+
                 // Disconnect WebSocket
                 if (socket) {
                     socket.disconnect();
                     socket = null;
                 }
-                
+
                 // Reset state
                 currentGroupId = null;
                 currentGroupName = null;
                 currentFilter = 'all';
                 currentContentInfo = null;
                 currentAddonUrl = null;
-                
+
                 // Show auth section, hide content section
                 authSection.style.display = 'grid';
                 contentSection.style.display = 'none';
-                
+
                 // Clear forms
                 createForm.reset();
                 joinForm.reset();
                 addContentForm.reset();
-                
+
                 // Clear any result messages
                 document.getElementById('createResult').innerHTML = '';
                 document.getElementById('joinResult').innerHTML = '';
                 document.getElementById('addContentResult').innerHTML = '';
-                
+
                 console.log('Logged out successfully');
             }
         };
@@ -566,10 +1363,10 @@
         // Copy addon URL function
         const copyAddonUrl = async () => {
             if (!currentAddonUrl) return;
-            
+
             copyAddonBtn.disabled = true;
             copyAddonBtn.textContent = 'Copying...';
-            
+
             try {
                 await copyToClipboard(currentAddonUrl);
                 copyAddonBtn.textContent = '✓ Copied!';
@@ -590,7 +1387,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('Page loaded, checking for existing session...');
             const session = loadSession();
-            
+
             if (session) {
                 console.log('Found existing session, auto-logging in...');
                 showContentSection(session.groupId, session.groupName, session.addonUrl, false);
@@ -603,7 +1400,7 @@
         window.deleteContent = deleteContent;
 
         // --- EVENT LISTENERS ---
-        
+
         // Group ID click to copy
         groupIdDisplay.addEventListener('click', () => {
             if (currentGroupId) {
@@ -621,7 +1418,7 @@
             e.preventDefault();
             const name = document.getElementById('groupName').value;
             const password = document.getElementById('groupPassword').value;
-            
+
             try {
                 const response = await fetch('/api/groups', {
                     method: 'POST',
@@ -650,68 +1447,176 @@
                 });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error);
-                
+
                 showContentSection(data.groupId, data.name, data.addonUrl);
             } catch (error) {
                 displayResult('joinResult', `Error: ${error.message}`, true);
             }
         });
 
-        fetchInfoBtn.addEventListener('click', async () => {
-    const input = document.getElementById('contentId').value; // Changed from 'imdbId'
-    const parsedId = extractContentId(input); // Now returns object
-    
-    if (!parsedId) {
-        displayResult('addContentResult', 'Invalid format. Please use IMDB ID (tt0111161) or Kitsu ID (1234).', true);
-        return;
-    }
-    
-    try {
-        // Use the actual ID for the API call
-        const response = await fetch(`/api/content/info/${parsedId.id}`);
-        const data = await response.json();
-        
-        if (response.ok) {
-            displayMovieInfo(data);
-            displayResult('addContentResult', 'Content info loaded successfully!');
-        } else {
-            displayResult('addContentResult', data.error || 'Failed to fetch content info.', true);
-        }
-    } catch (error) {
-        console.error('Fetch error:', error);
-        displayResult('addContentResult', 'Network error occurred.', true);
-    }
-});
+        searchBtn.addEventListener('click', async () => {
+            const input = document.getElementById('contentId').value.trim();
+
+            if (!input) {
+                displayResult('addContentResult', 'Please enter a search term or ID.', true);
+                return;
+            }
+
+            // Check if input looks like an ID (IMDB or Kitsu)
+            const parsedId = extractContentId(input);
+
+            if (parsedId) {
+                // Direct ID lookup
+                await fetchContentById(parsedId.id);
+            } else {
+                // Name search
+                await searchContentByName(input);
+            }
+        });
+
+        // Add Enter key support for search input
+        document.getElementById('contentId').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent form submission
+
+                // Only trigger search if button is not disabled
+                if (!searchBtn.disabled) {
+                    searchBtn.click(); // Trigger the same logic as clicking the search button
+                }
+            }
+        });
+
+        // Function to handle direct ID lookup
+        const fetchContentById = async (contentId) => {
+            searchBtn.disabled = true;
+            searchBtn.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(`/api/content/info/${contentId}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayMovieInfo(data);
+                    displayResult('addContentResult', 'Content info loaded successfully!');
+                    hideSearchResults();
+                } else {
+                    displayResult('addContentResult', data.error || 'Failed to fetch content info.', true);
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                displayResult('addContentResult', 'Network error occurred.', true);
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = 'Search';
+            }
+        };
+
+        // Function to handle name search
+        const searchContentByName = async (query) => {
+            searchBtn.disabled = true;
+            searchBtn.textContent = 'Searching...';
+
+            try {
+                // Clean up the search query for better results
+                const cleanQuery = query.trim()
+                    .replace(/\s+/g, ' ') // normalize whitespace
+                    .replace(/[^\w\s-:]/g, '') // remove special characters except basic ones
+                    .substring(0, 100); // limit length
+
+                const response = await fetch(`/api/content/search/${encodeURIComponent(cleanQuery)}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displaySearchResults(data.results);
+                    if (data.results.length > 0) {
+                        displayResult('addContentResult', `Found ${data.results.length} result(s). Click on one to select it.`);
+                    } else {
+                        displayResult('addContentResult', 'No results found. Try a different search term.', true);
+                    }
+                } else {
+                    displayResult('addContentResult', data.error || 'Search failed.', true);
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                displayResult('addContentResult', 'Network error occurred.', true);
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = 'Search';
+            }
+        };
+
+        // Function to display search results
+        const displaySearchResults = (results) => {
+            if (results.length === 0) {
+                searchResults.innerHTML = '<div class="no-results">No results found. Try a different search term.</div>';
+                searchResults.style.display = 'block';
+                return;
+            }
+
+            const resultsHtml = `
+            <div class="search-results-header">
+                Search Results (${results.length})
+            </div>
+            ${results.map(item => `
+                <div class="search-result-item" data-imdb-id="${item.imdbId}" onclick="selectSearchResult('${item.imdbId}')">
+                    <img class="search-result-poster"
+                         src="${item.poster || 'https://via.placeholder.com/50x75.png?text=No+Poster'}"
+                         alt="${item.title}">
+                    <div class="search-result-info">
+                        <div class="search-result-title">${item.title}</div>
+                        <div class="search-result-details">${item.year} • ${item.imdbId}</div>
+                        <span class="search-result-type ${item.type}">${item.type}</span>
+                    </div>
+                </div>
+            `).join('')}
+        `;
+
+            searchResults.innerHTML = resultsHtml;
+            searchResults.style.display = 'block';
+
+            // Hide content preview when showing search results
+            document.getElementById('contentPreview').style.display = 'none';
+            
+        };
+
+        // Function to handle search result selection
+        const selectSearchResult = async (imdbId) => {
+            await fetchContentById(imdbId);
+        };
+
+        // Function to hide search results
+        const hideSearchResults = () => {
+            searchResults.style.display = 'none';
+        };
 
 
         addContentForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!currentGroupId || !currentContentInfo) return;
-    addBtn.disabled = true;
-    addBtn.textContent = 'Adding...';
-    try {
-        const response = await fetch(`/api/groups/${currentGroupId}/content`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contentId: currentContentInfo.originalId || currentContentInfo.imdbId }) // Changed from imdbId to contentId
+            e.preventDefault();
+            if (!currentGroupId || !currentContentInfo) return;
+            addBtn.disabled = true;
+            addBtn.textContent = 'Adding...';
+            try {
+                const response = await fetch(`/api/groups/${currentGroupId}/content`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contentId: currentContentInfo.originalId || currentContentInfo.imdbId }) // Changed from imdbId to contentId
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error);
+
+                displayResult('addContentResult', data.message, false);
+                loadContent(); // Manually reload for immediate feedback
+                // Reset form
+                addContentForm.reset();
+                document.getElementById('contentPreview').style.display = 'none';
+                currentContentInfo = null;
+            } catch (error) {
+                displayResult('addContentResult', `Error: ${error.message}`, true);
+            } finally {
+                addBtn.disabled = false;
+                addBtn.textContent = 'Add to Group';
+            }
         });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error);
-        
-        displayResult('addContentResult', data.message, false);
-        loadContent(); // Manually reload for immediate feedback
-        // Reset form
-        addContentForm.reset();
-        document.getElementById('contentPreview').style.display = 'none';
-        addBtn.style.display = 'none';
-        currentContentInfo = null;
-    } catch (error) {
-        displayResult('addContentResult', `Error: ${error.message}`, true);
-    } finally {
-        addBtn.disabled = false;
-        addBtn.textContent = 'Add to Group';
-    }
-});
 
         filterButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -721,6 +1626,1348 @@
                 loadContent();
             });
         });
+
+        // Batch Upload JavaScript
+        let uploadedFileData = null;
+        let columnMappings = {};
+
+        // Tab switching for upload methods
+        document.querySelectorAll('.upload-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                // Remove active class from all tabs and content
+                document.querySelectorAll('.upload-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.upload-method-content').forEach(c => {
+                    c.classList.remove('active');
+                    c.style.display = 'none';
+                });
+
+                // Add active class to clicked tab
+                e.target.classList.add('active');
+
+                // Show corresponding content
+                const method = e.target.dataset.method;
+                const content = document.getElementById(`${method}Upload`);
+                content.classList.add('active');
+                content.style.display = 'block';
+            });
+        });
+
+        // File input handling
+        const fileInput = document.getElementById('fileInput');
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const fileDropZone = fileUploadArea.querySelector('.file-drop-zone');
+        const filePreview = document.getElementById('filePreview');
+        const processBatchBtn = document.getElementById('processBatchBtn');
+
+        // Drag and drop functionality
+        fileDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.add('dragover');
+        });
+
+        fileDropZone.addEventListener('dragleave', () => {
+            fileDropZone.classList.remove('dragover');
+        });
+
+        fileDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelection(files[0]);
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelection(e.target.files[0]);
+            }
+        });
+
+        // Handle file selection and preview
+        const handleFileSelection = async (file) => {
+            try {
+                // Validate file type
+                const validTypes = [
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                    'application/vnd.ms-excel', // .xls
+                    'text/csv' // .csv
+                ];
+
+                if (!validTypes.includes(file.type) && !file.name.toLowerCase().match(/\.(xlsx|xls|csv)$/)) {
+                    throw new Error('Please select a valid Excel (.xlsx, .xls) or CSV file.');
+                }
+
+                // Show loading state
+                filePreview.innerHTML = '<div style="text-align: center; padding: 2rem;"><p>Processing file...</p></div>';
+                filePreview.style.display = 'block';
+
+                // Read and parse file
+                const fileData = await readFile(file);
+                uploadedFileData = fileData;
+
+                // Show preview
+                displayFilePreview(file, fileData);
+                processBatchBtn.style.display = 'block';
+
+            } catch (error) {
+                console.error('File processing error:', error);
+                filePreview.innerHTML = `<div class="result error">Error: ${error.message}</div>`;
+                filePreview.style.display = 'block';
+                processBatchBtn.style.display = 'none';
+            }
+        };
+
+        // Read file using analysis tool
+        const readFile = async (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        if (file.name.toLowerCase().endsWith('.csv')) {
+                            // Parse CSV manually (simple approach)
+                            const text = e.target.result;
+                            const lines = text.split('\n').filter(line => line.trim());
+
+                            if (lines.length < 2) {
+                                throw new Error('CSV file must have at least a header row and one data row');
+                            }
+
+                            // Parse header
+                            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+
+                            // Parse data rows
+                            const data = [];
+                            for (let i = 1; i < lines.length; i++) {
+                                const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                                const row = {};
+                                headers.forEach((header, index) => {
+                                    row[header] = values[index] || '';
+                                });
+                                data.push(row);
+                            }
+
+                            resolve(data);
+                        } else {
+                            // For Excel files, we'll use the analysis tool
+                            throw new Error('Excel file support coming soon. Please use CSV files for now.');
+                        }
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = () => reject(new Error('Failed to read file'));
+
+                // Read as text for CSV
+                if (file.name.toLowerCase().endsWith('.csv')) {
+                    reader.readAsText(file);
+                } else {
+                    reader.readAsArrayBuffer(file);
+                }
+            });
+        };
+
+        // Display file preview with column mapping
+        const displayFilePreview = (file, data) => {
+            if (!data || data.length === 0) {
+                filePreview.innerHTML = '<div class="result error">No data found in file.</div>';
+                return;
+            }
+
+            const columns = Object.keys(data[0]);
+            const sampleRows = data.slice(0, 5); // Show first 5 rows
+
+            const html = `
+                    <div class="file-preview-container">
+                        <div class="file-info">
+                            <div class="file-info-text">
+                                <h4>📁 ${file.name}</h4>
+                                <p>${data.length} rows, ${columns.length} columns</p>
+                            </div>
+                        </div>
+
+                        <div class="column-mapping">
+                            <h5>Column Mapping</h5>
+                            <p style="margin-bottom: 1rem; color: #666; font-size: 0.9rem;">
+                                Map your file columns to the required fields. Title is required, others are optional.
+                            </p>
+                            <div class="mapping-row">
+                                <label>Title:</label>
+                                <select id="titleMapping" required>
+                                    <option value="">-- Select Column --</option>
+                                    ${columns.map(col => `<option value="${col}" ${col.toLowerCase().includes('title') || col.toLowerCase().includes('name') ? 'selected' : ''}>${col}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="mapping-row">
+                                <label>Year:</label>
+                                <select id="yearMapping">
+                                    <option value="">-- Optional --</option>
+                                    ${columns.map(col => `<option value="${col}" ${col.toLowerCase().includes('year') || col.toLowerCase().includes('date') ? 'selected' : ''}>${col}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="mapping-row">
+                                <label>IMDB ID:</label>
+                                <select id="imdbMapping">
+                                    <option value="">-- Optional --</option>
+                                    ${columns.map(col => `<option value="${col}" ${col.toLowerCase().includes('imdb') || col.toLowerCase().includes('id') ? 'selected' : ''}>${col}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="preview-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        ${columns.map(col => `<th>${col}</th>`).join('')}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${sampleRows.map(row => `
+                                        <tr>
+                                            ${columns.map(col => `<td>${row[col] || ''}</td>`).join('')}
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        ${data.length > 5 ? `<p style="text-align: center; margin-top: 0.5rem; color: #666; font-size: 0.9rem; font-style: italic;">Showing first 5 rows of ${data.length} total</p>` : ''}
+                    </div>
+                `;
+
+            filePreview.innerHTML = html;
+        };
+
+        // Process batch upload button
+        processBatchBtn.addEventListener('click', async () => {
+            try {
+                // Get column mappings
+                const titleCol = document.getElementById('titleMapping').value;
+                const yearCol = document.getElementById('yearMapping').value;
+                const imdbCol = document.getElementById('imdbMapping').value;
+
+                if (!titleCol) {
+                    throw new Error('Title column mapping is required');
+                }
+
+                // Prepare data for processing
+                const processData = uploadedFileData.map(row => ({
+                    title: row[titleCol],
+                    year: yearCol ? row[yearCol] : null,
+                    imdbId: imdbCol ? row[imdbCol] : null
+                })).filter(item => item.title && item.title.trim()); // Remove rows without titles
+
+                if (processData.length === 0) {
+                    throw new Error('No valid rows found with titles');
+                }
+
+                // Start batch processing
+                await processBatchContent(processData);
+
+            } catch (error) {
+                console.error('Batch processing error:', error);
+                displayResult('addContentResult', `Error: ${error.message}`, true);
+            }
+        });
+
+        // Main batch processing function
+        const processBatchContent = async (items) => {
+            const batchResults = document.getElementById('batchResults');
+
+            // Show progress container
+            batchResults.innerHTML = `
+                    <div class="batch-progress">
+                        <h4 style="margin: 0 0 1rem 0; color: #17a2b8;">🔄 Processing Batch Upload</h4>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+                        </div>
+                        <p id="progressText">Starting batch process...</p>
+                    </div>
+                `;
+            batchResults.style.display = 'block';
+
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+
+            // Results tracking
+            const results = {
+                success: [],
+                duplicates: [],
+                errors: [],
+                notFound: []
+            };
+
+            // Process items one by one
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const progress = Math.round(((i + 1) / items.length) * 100);
+
+                // Update progress
+                progressFill.style.width = `${progress}%`;
+                progressText.textContent = `Processing "${item.title}" (${i + 1}/${items.length})`;
+
+                try {
+                    // If IMDB ID is provided, use it directly
+                    if (item.imdbId && item.imdbId.trim()) {
+                        const result = await addSingleItem(item.imdbId.trim(), item.title);
+                        categorizeResult(result, results, item);
+                    } else {
+                        // Search by title and year
+                        const searchQuery = item.year ? `${item.title} ${item.year}` : item.title;
+                        const searchResult = await searchForItem(searchQuery, item.title, item.year);
+                        categorizeResult(searchResult, results, item);
+                    }
+                } catch (error) {
+                    console.error(`Error processing ${item.title}:`, error);
+                    results.errors.push({
+                        item: item,
+                        error: error.message
+                    });
+                }
+
+                // Small delay to prevent overwhelming the server
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            // Show final results
+            displayBatchResults(results);
+
+            // Reload the content list to show new additions
+            loadContent();
+        };
+
+        // Add single item by IMDB ID
+        const addSingleItem = async (imdbId, title) => {
+            try {
+                const response = await fetch(`/api/groups/${currentGroupId}/content`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contentId: imdbId })
+                });
+
+                const data = await response.json();
+
+                if (response.status === 409) {
+                    // Duplicate
+                    return { type: 'duplicate', title: title, message: data.error };
+                } else if (!response.ok) {
+                    throw new Error(data.error || 'Failed to add content');
+                }
+
+                return { type: 'success', title: data.info.title, info: data.info };
+            } catch (error) {
+                throw error;
+            }
+        };
+
+        // Search for item and add the best match
+        const searchForItem = async (searchQuery, originalTitle, year) => {
+            try {
+                let searchData = null;
+
+                // Try multiple search strategies
+                const searchStrategies = [
+                    // 1. Try just the title first (often works better for series)
+                    originalTitle,
+                    // 2. Try title with year if year is provided
+                    year ? `${originalTitle} ${year}` : null,
+                    // 3. Try the original search query as fallback
+                    searchQuery !== originalTitle ? searchQuery : null
+                ].filter(Boolean); // Remove null values
+
+                // Try each search strategy until we get results
+                for (const strategy of searchStrategies) {
+                    console.log(`Trying search strategy: "${strategy}"`);
+
+                    const searchResponse = await fetch(`/api/content/search/${encodeURIComponent(strategy)}`);
+                    const data = await searchResponse.json();
+
+                    if (searchResponse.ok && data.results && data.results.length > 0) {
+                        searchData = data;
+                        console.log(`Found ${data.results.length} results with strategy: "${strategy}"`);
+                        break;
+                    }
+                }
+
+                if (!searchData || !searchData.results || searchData.results.length === 0) {
+                    console.log(`No results found for "${originalTitle}" with any search strategy`);
+                    return { type: 'notFound', title: originalTitle };
+                }
+
+                // Filter out obviously irrelevant results
+                const filteredResults = searchData.results.filter(result => {
+                    const title = result.title.toLowerCase();
+                    const originalLower = originalTitle.toLowerCase();
+
+                    // Remove results that are clearly not movies/series
+                    const badPatterns = [
+                        'episode',
+                        'podcast',
+                        'interview',
+                        'making of',
+                        'behind the scenes',
+                        'documentary about',
+                        'review',
+                        'trailer',
+                        'featurette',
+                        'special edition',
+                        'director\'s cut discussion',
+                        'commentary'
+                    ];
+
+                    // Check if title contains bad patterns
+                    const hasBadPattern = badPatterns.some(pattern => title.includes(pattern));
+                    if (hasBadPattern) {
+                        console.log(`Filtering out "${result.title}" - contains bad pattern`);
+                        return false;
+                    }
+
+                    // Keep results that have reasonable similarity to original title
+                    const titleWords = originalLower.split(' ').filter(word => word.length > 2);
+                    const resultWords = title.split(' ').filter(word => word.length > 2);
+
+                    // Check for exact match
+                    if (title === originalLower) {
+                        return true;
+                    }
+
+                    // For short titles (1-2 words), be more strict
+                    if (titleWords.length <= 2) {
+                        return titleWords.every(word =>
+                            resultWords.some(resultWord =>
+                                resultWord.includes(word) || word.includes(resultWord)
+                            )
+                        );
+                    }
+
+                    // For longer titles, require at least half the words to match
+                    const matchingWords = titleWords.filter(word =>
+                        resultWords.some(resultWord =>
+                            resultWord.includes(word) || word.includes(resultWord)
+                        )
+                    );
+
+                    return matchingWords.length >= Math.ceil(titleWords.length / 2);
+                });
+
+                if (filteredResults.length === 0) {
+                    console.log(`No relevant results found for "${originalTitle}" after filtering`);
+                    return { type: 'notFound', title: originalTitle };
+                }
+
+                // Find best match from filtered results
+                let bestMatch = null;
+
+                // 1. Look for exact title match first
+                for (const result of filteredResults) {
+                    if (result.title.toLowerCase() === originalTitle.toLowerCase()) {
+                        bestMatch = result;
+                        console.log(`Found exact match for "${originalTitle}": "${result.title}"`);
+                        break;
+                    }
+                }
+
+                // 2. If no exact match and year provided, look for close matches with correct year
+                if (!bestMatch && year) {
+                    for (const result of filteredResults) {
+                        const resultYear = parseInt(result.year);
+                        const searchYear = parseInt(year);
+
+                        // Allow 1 year difference (sometimes release dates vary)
+                        if (Math.abs(resultYear - searchYear) <= 1) {
+                            bestMatch = result;
+                            console.log(`Found year match for "${originalTitle}": "${result.title}" (${result.year})`);
+                            break;
+                        }
+                    }
+                }
+
+                // 3. If still no match, take the first filtered result
+                if (!bestMatch) {
+                    bestMatch = filteredResults[0];
+                    console.log(`Using first filtered result for "${originalTitle}": "${bestMatch.title}"`);
+                }
+
+                // Try to add the best match
+                return await addSingleItem(bestMatch.imdbId, bestMatch.title);
+
+            } catch (error) {
+                console.error(`Search error for "${originalTitle}":`, error);
+                throw error;
+            }
+        };
+
+        // Categorize processing results
+        const categorizeResult = (result, results, originalItem) => {
+            switch (result.type) {
+                case 'success':
+                    results.success.push({
+                        original: originalItem,
+                        added: result.title,
+                        info: result.info
+                    });
+                    break;
+                case 'duplicate':
+                    results.duplicates.push({
+                        original: originalItem,
+                        title: result.title,
+                        message: result.message
+                    });
+                    break;
+                case 'notFound':
+                    results.notFound.push({
+                        original: originalItem
+                    });
+                    break;
+                default:
+                    results.errors.push({
+                        item: originalItem,
+                        error: 'Unknown result type'
+                    });
+            }
+        };
+
+        // Display final batch results
+        const displayBatchResults = (results) => {
+            const total = results.success.length + results.duplicates.length + results.errors.length + results.notFound.length;
+
+            const html = `
+                    <div class="batch-progress">
+                        <h4 style="margin: 0 0 1rem 0; color: #28a745;">✅ Batch Processing Complete</h4>
+
+                        <div class="batch-results-summary">
+                            <div class="result-stat success">
+                                <span class="number">${results.success.length}</span>
+                                <span class="label">Added</span>
+                            </div>
+                            <div class="result-stat warning">
+                                <span class="number">${results.duplicates.length}</span>
+                                <span class="label">Duplicates</span>
+                            </div>
+                            <div class="result-stat error">
+                                <span class="number">${results.errors.length}</span>
+                                <span class="label">Errors</span>
+                            </div>
+                            <div class="result-stat info">
+                                <span class="number">${results.notFound.length}</span>
+                                <span class="label">Not Found</span>
+                            </div>
+                        </div>
+
+                        ${total > 0 ? `
+                            <div class="batch-details">
+                                ${results.success.map(item => `
+                                    <div class="batch-item">
+                                        <div class="batch-item-status success">✓</div>
+                                        <div class="batch-item-info">
+                                            <div class="batch-item-title">✅ ${item.added}</div>
+                                            <div class="batch-item-details">Added successfully</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+
+                                ${results.duplicates.map(item => `
+                                    <div class="batch-item">
+                                        <div class="batch-item-status warning">⚠</div>
+                                        <div class="batch-item-info">
+                                            <div class="batch-item-title">⚠️ ${item.original.title}</div>
+                                            <div class="batch-item-details">Already in group</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+
+                                ${results.notFound.map(item => `
+                                    <div class="batch-item">
+                                        <div class="batch-item-status info">?</div>
+                                        <div class="batch-item-info">
+                                            <div class="batch-item-title">❓ ${item.original.title}</div>
+                                            <div class="batch-item-details">Not found in database</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+
+                                ${results.errors.map(item => `
+                                    <div class="batch-item">
+                                        <div class="batch-item-status error">✗</div>
+                                        <div class="batch-item-info">
+                                            <div class="batch-item-title">❌ ${item.item.title}</div>
+                                            <div class="batch-item-details">Error: ${item.error}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+            document.getElementById('batchResults').innerHTML = html;
+        };
+
+        // Reset batch upload form
+        const resetBatchUpload = () => {
+            uploadedFileData = null;
+            columnMappings = {};
+            fileInput.value = '';
+            filePreview.style.display = 'none';
+            processBatchBtn.style.display = 'none';
+            document.getElementById('batchResults').style.display = 'none';
+
+            // Reset file drop zone text
+            fileDropZone.querySelector('.file-drop-text').textContent = 'Click to select file or drag & drop';
+        };
+
+        // JSON Upload Functionality
+        const jsonFileInput = document.getElementById('jsonFileInput');
+        const jsonFileUploadArea = document.getElementById('jsonFileUploadArea');
+        const jsonDropZone = jsonFileUploadArea.querySelector('.file-drop-zone');
+        const jsonFilePreview = document.getElementById('jsonFilePreview');
+        const processJsonBtn = document.getElementById('processJsonBtn');
+        let uploadedJsonData = null;
+
+        // JSON Drag and drop functionality
+        jsonDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            jsonDropZone.classList.add('dragover');
+        });
+
+        jsonDropZone.addEventListener('dragleave', () => {
+            jsonDropZone.classList.remove('dragover');
+        });
+
+        jsonDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            jsonDropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleJsonFileSelection(files[0]);
+            }
+        });
+
+        // JSON File input change
+        jsonFileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleJsonFileSelection(e.target.files[0]);
+            }
+        });
+
+        // Handle JSON file selection and preview
+        const handleJsonFileSelection = async (file) => {
+            try {
+                // Validate file type
+                if (!file.name.toLowerCase().endsWith('.json')) {
+                    throw new Error('Please select a valid JSON file (.json).');
+                }
+
+                // Show loading state
+                jsonFilePreview.innerHTML = '<div style="text-align: center; padding: 2rem;"><p>Processing JSON file...</p></div>';
+                jsonFilePreview.style.display = 'block';
+
+                // Read and parse JSON file
+                const jsonData = await readJsonFile(file);
+                uploadedJsonData = jsonData;
+
+                // Show preview
+                displayJsonFilePreview(file, jsonData);
+                processJsonBtn.style.display = 'block';
+
+            } catch (error) {
+                console.error('JSON file processing error:', error);
+                jsonFilePreview.innerHTML = `<div class="result error">Error: ${error.message}</div>`;
+                jsonFilePreview.style.display = 'block';
+                processJsonBtn.style.display = 'none';
+            }
+        };
+
+        // Read JSON file
+        const readJsonFile = async (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const jsonData = JSON.parse(e.target.result);
+
+                        // Extract items from various JSON structures
+                        const extractedItems = extractItemsFromJson(jsonData);
+
+                        if (extractedItems.length === 0) {
+                            throw new Error('No valid movie/series items found in JSON file');
+                        }
+
+                        resolve(extractedItems);
+                    } catch (error) {
+                        if (error instanceof SyntaxError) {
+                            reject(new Error('Invalid JSON format. Please check your file syntax.'));
+                        } else {
+                            reject(error);
+                        }
+                    }
+                };
+                reader.onerror = () => reject(new Error('Failed to read JSON file'));
+                reader.readAsText(file);
+            });
+        };
+
+        // Extract items from various JSON structures
+        const extractItemsFromJson = (data) => {
+            let items = [];
+
+            // Helper function to check if an object looks like a movie/series item
+            const isMediaItem = (obj) => {
+                if (!obj || typeof obj !== 'object') return false;
+
+                // Look for title-like properties
+                const titleKeys = ['title', 'name', 'movie_title', 'series_name', 'film_title'];
+                const hasTitle = titleKeys.some(key => obj[key] && typeof obj[key] === 'string');
+
+                return hasTitle;
+            };
+
+            // Helper function to normalize an item to our standard format
+            const normalizeItem = (obj) => {
+                const item = {};
+
+                // Find title
+                const titleKeys = ['title', 'name', 'movie_title', 'series_name', 'film_title'];
+                for (const key of titleKeys) {
+                    if (obj[key] && typeof obj[key] === 'string') {
+                        item.title = obj[key].trim();
+                        break;
+                    }
+                }
+
+                // Find year
+                const yearKeys = ['year', 'release_year', 'releaseYear', 'date', 'release_date'];
+                for (const key of yearKeys) {
+                    if (obj[key]) {
+                        const year = parseInt(obj[key]);
+                        if (year && year > 1800 && year <= new Date().getFullYear() + 5) {
+                            item.year = year;
+                            break;
+                        }
+                    }
+                }
+
+                // Find IMDB ID
+                const imdbKeys = ['imdbId', 'imdb_id', 'imdbID', 'IMDB_ID', 'imdb', 'id'];
+                for (const key of imdbKeys) {
+                    if (obj[key] && typeof obj[key] === 'string') {
+                        const id = obj[key].trim();
+                        if (id.match(/^tt\d+$/) || id.match(/^\d+$/)) {
+                            item.imdbId = id;
+                            break;
+                        }
+                    }
+                }
+
+                // Find type
+                const typeKeys = ['type', 'media_type', 'kind', 'category'];
+                for (const key of typeKeys) {
+                    if (obj[key] && typeof obj[key] === 'string') {
+                        const type = obj[key].toLowerCase();
+                        if (type.includes('series') || type.includes('tv') || type.includes('show')) {
+                            item.type = 'series';
+                        } else if (type.includes('movie') || type.includes('film')) {
+                            item.type = 'movie';
+                        }
+                        break;
+                    }
+                }
+
+                return item.title ? item : null;
+            };
+
+            // Process different JSON structures
+            if (Array.isArray(data)) {
+                // Direct array of items
+                items = data.map(normalizeItem).filter(item => item);
+            } else if (typeof data === 'object') {
+                // Check for nested arrays in the object
+                for (const [key, value] of Object.entries(data)) {
+                    if (Array.isArray(value)) {
+                        // Found an array, check if it contains media items
+                        const nestedItems = value.map(normalizeItem).filter(item => item);
+                        if (nestedItems.length > 0) {
+                            items = items.concat(nestedItems);
+                        }
+                    } else if (isMediaItem(value)) {
+                        // Single item nested in object
+                        const item = normalizeItem(value);
+                        if (item) items.push(item);
+                    }
+                }
+
+                // If no nested arrays found, try treating the root object as a single item
+                if (items.length === 0 && isMediaItem(data)) {
+                    const item = normalizeItem(data);
+                    if (item) items.push(item);
+                }
+            }
+
+            return items;
+        };
+
+        // Display JSON file preview
+        const displayJsonFilePreview = (file, items) => {
+            if (!items || items.length === 0) {
+                jsonFilePreview.innerHTML = '<div class="result error">No valid movie/series data found in JSON file.</div>';
+                return;
+            }
+
+            // Count items with/without IMDB IDs
+            const withImdb = items.filter(item => item.imdbId).length;
+            const withoutImdb = items.length - withImdb;
+
+            const sampleItems = items.slice(0, 10); // Show first 10 items
+
+            const html = `
+                <div class="file-preview-container">
+                    <div class="file-info">
+                        <div class="file-info-text">
+                            <h4>📄 ${file.name}</h4>
+                            <p>${items.length} items found • ${withImdb} with IMDB IDs • ${withoutImdb} will be searched</p>
+                        </div>
+                    </div>
+
+                    <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 1rem; margin: 1rem 0;">
+                        <h5 style="margin: 0 0 0.5rem 0; color: #856404;">📋 Processing Plan</h5>
+                        <ul style="margin: 0; padding-left: 1.5rem; color: #856404;">
+                            <li>Items with IMDB IDs will be added directly</li>
+                            <li>Items without IMDB IDs will be searched by title${items.some(i => i.year) ? ' and year' : ''}</li>
+                            <li>Best matches will be selected automatically</li>
+                        </ul>
+                    </div>
+
+                    <div class="preview-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Year</th>
+                                    <th>IMDB ID</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${sampleItems.map(item => `
+                                    <tr>
+                                        <td><strong>${item.title}</strong></td>
+                                        <td>${item.year || '—'}</td>
+                                        <td>${item.imdbId || '—'}</td>
+                                        <td>${item.type || 'Auto-detect'}</td>
+                                        <td>
+                                            ${item.imdbId
+                    ? '<span style="color: #28a745; font-weight: 600;">✓ Direct</span>'
+                    : '<span style="color: #ffc107; font-weight: 600;">🔍 Search</span>'
+                }
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    ${items.length > 10 ? `<p style="text-align: center; margin-top: 0.5rem; color: #666; font-size: 0.9rem; font-style: italic;">Showing first 10 items of ${items.length} total</p>` : ''}
+                </div>
+            `;
+
+            jsonFilePreview.innerHTML = html;
+        };
+
+        // Process JSON upload button
+        processJsonBtn.addEventListener('click', async () => {
+            try {
+                if (!uploadedJsonData || uploadedJsonData.length === 0) {
+                    throw new Error('No valid JSON data to process');
+                }
+
+                // Start batch processing with the JSON data
+                await processBatchContent(uploadedJsonData);
+
+            } catch (error) {
+                console.error('JSON batch processing error:', error);
+                displayResult('addContentResult', `Error: ${error.message}`, true);
+            }
+        });
+
+        // Reset JSON upload form
+        const resetJsonUpload = () => {
+            uploadedJsonData = null;
+            jsonFileInput.value = '';
+            jsonFilePreview.style.display = 'none';
+            processJsonBtn.style.display = 'none';
+
+            // Reset file drop zone text
+            jsonDropZone.querySelector('.file-drop-text').textContent = 'Click to select JSON file or drag & drop';
+        };
+
+        // IMDB List Import Functionality
+        const imdbUrlForm = document.getElementById('imdbUrlForm');
+        const imdbUrl = document.getElementById('imdbUrl');
+        const fetchImdbBtn = document.getElementById('fetchImdbBtn');
+        const processImdbBtn = document.getElementById('processImdbBtn');
+        const imdbFetchResult = document.getElementById('imdbFetchResult');
+        const imdbListPreview = document.getElementById('imdbListPreview');
+        let fetchedImdbData = null;
+
+        // Step 1: Scan IMDB list for IDs
+        fetchImdbBtn.addEventListener('click', async () => {
+            const url = imdbUrl.value.trim();
+
+            if (!url) {
+                displayResult('imdbFetchResult', 'Please enter an IMDB URL.', true);
+                return;
+            }
+
+            if (!url.includes('imdb.com')) {
+                displayResult('imdbFetchResult', 'Please enter a valid IMDB URL.', true);
+                return;
+            }
+
+            await scanImdbList(url);
+        });
+
+
+        // Scan IMDB list for IDs only (fast)
+        const scanImdbList = async (url) => {
+            fetchImdbBtn.disabled = true;
+            fetchImdbBtn.textContent = 'Scanning...';
+
+            try {
+                imdbFetchResult.innerHTML = '<div style="text-align: center; padding: 1rem;"><p>🔍 Scanning IMDB list for movie/series IDs...</p></div>';
+
+                const response = await fetch('/api/imdb/scan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to scan IMDB list');
+                }
+
+                if (data.items.length === 0) {
+                    throw new Error(data.message || 'No movies or TV shows found in this list');
+                }
+
+                fetchedImdbData = data.items;
+
+                // Show processing options and preview
+                document.getElementById('imdbProcessingOptions').style.display = 'block';
+                displayResult('imdbFetchResult',
+                    `✅ Found ${data.items.length} items! Choose how many to fetch detailed info for.`,
+                    false);
+                processImdbBtn.style.display = 'block';
+                processImdbBtn.textContent = 'Fetch Detailed Info';
+
+            } catch (error) {
+                console.error('IMDB scan error:', error);
+                displayResult('imdbFetchResult', `Error: ${error.message}`, true);
+                document.getElementById('imdbProcessingOptions').style.display = 'none';
+                processImdbBtn.style.display = 'none';
+                fetchedImdbData = null;
+            } finally {
+                fetchImdbBtn.disabled = false;
+                fetchImdbBtn.textContent = 'Scan IMDB List';
+            }
+        };
+
+        // Enrich IMDB data with detailed information
+        const enrichImdbData = async () => {
+            const limitSelect = document.getElementById('imdbProcessLimit');
+            const selectedLimit = limitSelect.value;
+
+            processImdbBtn.disabled = true;
+            processImdbBtn.textContent = 'Processing...';
+
+            try {
+                const startTime = Date.now();
+                imdbFetchResult.innerHTML = '<div style="text-align: center; padding: 1rem;"><p>🔄 Fetching detailed movie/series information...</p><p style="color: #666; font-size: 0.9rem;">This may take a while. Please wait...</p></div>';
+
+                const response = await fetch('/api/imdb/enrich', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        items: fetchedImdbData,
+                        limit: selectedLimit
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to enrich IMDB data');
+                }
+
+                const endTime = Date.now();
+                const processingTime = Math.round((endTime - startTime) / 1000);
+
+                fetchedImdbData = data.items;
+                displayImdbPreview({ items: data.items, totalFound: data.available, processed: data.processed });
+
+                const timeMessage = processingTime > 60
+                    ? `${Math.floor(processingTime / 60)}m ${processingTime % 60}s`
+                    : `${processingTime}s`;
+
+                displayResult('imdbFetchResult',
+                    `✅ Enhanced ${data.items.length} items with detailed info!<br>
+    <small style="color: #666;">Processing completed in ${timeMessage}</small>`,
+                    false);
+
+                // Hide the processing options and change button text
+                document.getElementById('imdbProcessingOptions').style.display = 'none';
+                processImdbBtn.textContent = 'Import Selected Items';
+
+                // Show the preview with import options
+                imdbListPreview.style.display = 'block';
+
+            } catch (error) {
+                console.error('IMDB enrich error:', error);
+                displayResult('imdbFetchResult', `Error: ${error.message}`, true);
+            } finally {
+                processImdbBtn.disabled = false;
+            }
+        };
+
+        // Fetch and parse IMDB list
+        const fetchImdbList = async (url) => {
+            fetchImdbBtn.disabled = true;
+            fetchImdbBtn.textContent = 'Fetching...';
+
+            try {
+                const startTime = Date.now();
+                imdbFetchResult.innerHTML = '<div style="text-align: center; padding: 1rem;"><p>🔍 Fetching IMDB list...</p></div>';
+
+                const limitSelect = document.getElementById('imdbProcessLimit');
+                const selectedLimit = limitSelect ? limitSelect.value : '100';
+
+                const response = await fetch('/api/imdb/scrape', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        url: url,
+                        limit: selectedLimit
+                    })
+                });
+
+                // Debug: Log response details
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+
+                // Check if response is actually JSON
+                const contentType = response.headers.get('content-type');
+                console.log('Content-Type:', contentType);
+
+                if (!contentType || !contentType.includes('application/json')) {
+                    // If it's not JSON, get the text to see what we actually got
+                    const text = await response.text();
+                    console.log('Non-JSON response:', text.substring(0, 500)); // First 500 chars
+                    throw new Error(`Server returned ${contentType || 'unknown content type'} instead of JSON. Check server logs.`);
+                }
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to fetch IMDB list');
+                }
+
+                if (data.items.length === 0) {
+                    throw new Error(data.message || 'No movies or TV shows found in this list');
+                }
+
+                const endTime = Date.now();
+                const processingTime = Math.round((endTime - startTime) / 1000);
+
+                fetchedImdbData = data.items;
+                displayImdbPreview(data);
+
+                const timeMessage = processingTime > 60
+                    ? `${Math.floor(processingTime / 60)}m ${processingTime % 60}s`
+                    : `${processingTime}s`;
+
+                displayResult('imdbFetchResult',
+                    `✅ Found ${data.items.length} items from IMDB list!${data.totalFound ? ` (${data.totalFound} total found)` : ''}<br>
+                    <small style="color: #666;">Processing completed in ${timeMessage}</small>`,
+                    false);
+                processImdbBtn.style.display = 'block';
+
+            } catch (error) {
+                console.error('IMDB fetch error:', error);
+                displayResult('imdbFetchResult', `Error: ${error.message}`, true);
+                imdbListPreview.style.display = 'none';
+                processImdbBtn.style.display = 'none';
+                fetchedImdbData = null;
+            } finally {
+                fetchImdbBtn.disabled = false;
+                fetchImdbBtn.textContent = 'Fetch IMDB List';
+            }
+        };
+
+        // Display IMDB list preview with selection options
+        const displayImdbPreview = (data) => {
+            const withYear = data.items.filter(item => item.year).length;
+            const withType = data.items.filter(item => item.type).length;
+
+            const html = `
+                <div class="file-preview-container">
+                    <div class="file-info">
+                        <div class="file-info-text">
+                            <h4>🎬 IMDB List Import</h4>
+                            <p>${data.items.length} items enhanced${data.totalFound ? ` (${data.totalFound} total found)` : ''} • ${withYear} with years • ${withType} with type info</p>
+                        </div>
+                    </div>
+
+                    <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 6px; padding: 1rem; margin: 1rem 0;">
+                        <h5 style="margin: 0 0 0.5rem 0; color: #155724;">✨ Select Items to Import</h5>
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; color: #155724;">
+                                <input type="checkbox" id="selectAllImdb" checked style="margin: 0;">
+                                <span>Select All (${data.items.length} items)</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; color: #155724;">
+                                <input type="checkbox" id="moviesOnlyImdb" style="margin: 0;">
+                                <span>Movies Only</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; color: #155724;">
+                                <input type="checkbox" id="seriesOnlyImdb" style="margin: 0;">
+                                <span>Series Only</span>
+                            </label>
+                        </div>
+                        <p style="margin: 0; color: #155724; font-size: 0.9rem;">✅ All items have IMDB IDs and will be added directly (no searching required).</p>
+                    </div>
+
+                    <div class="preview-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">
+                                        <input type="checkbox" id="toggleAllImdb" checked style="margin: 0;">
+                                    </th>
+                                    <th>Title</th>
+                                    <th>Year</th>
+                                    <th>IMDB ID</th>
+                                    <th>Type</th>
+                                </tr>
+                            </thead>
+                            <tbody id="imdbItemsList">
+                                ${data.items.map((item, index) => `
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" class="imdb-item-checkbox" data-index="${index}" checked style="margin: 0;">
+                                        </td>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                                ${item.poster ? `<img src="${item.poster}" alt="${item.title}" style="width: 30px; height: 45px; object-fit: cover; border-radius: 3px;">` : '<div style="width: 30px; height: 45px; background: #e0e0e0; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem;">📽️</div>'}
+                                                <strong>${item.title}</strong>
+                                            </div>
+                                        </td>
+                                        <td>${item.year || '—'}</td>
+                                        <td><code>${item.imdbId}</code></td>
+                                        <td>
+                                            ${item.type
+                                        ? `<span class="content-type ${item.type}">${item.type}</span>`
+                                        : '<span style="color: #666;">Auto-detect</span>'
+                                    }
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            imdbListPreview.innerHTML = html;
+            imdbListPreview.style.display = 'block';
+
+            // Add event listeners for selection controls
+            setupImdbSelectionControls();
+        };
+
+        // Setup selection controls for IMDB import
+        const setupImdbSelectionControls = () => {
+            const selectAll = document.getElementById('selectAllImdb');
+            const moviesOnly = document.getElementById('moviesOnlyImdb');
+            const seriesOnly = document.getElementById('seriesOnlyImdb');
+            const toggleAll = document.getElementById('toggleAllImdb');
+            const checkboxes = document.querySelectorAll('.imdb-item-checkbox');
+
+            // Define the update function first
+            const updateToggleAllState = () => {
+                const checked = document.querySelectorAll('.imdb-item-checkbox:checked').length;
+                const total = checkboxes.length;
+                toggleAll.checked = checked === total;
+                toggleAll.indeterminate = checked > 0 && checked < total;
+            };
+
+            // Select all toggle
+            selectAll.addEventListener('change', () => {
+                checkboxes.forEach(cb => cb.checked = selectAll.checked);
+                updateToggleAllState();
+            });
+
+            // Toggle all in header
+            toggleAll.addEventListener('change', () => {
+                checkboxes.forEach(cb => cb.checked = toggleAll.checked);
+                selectAll.checked = toggleAll.checked;
+            });
+
+            // Movies only filter
+            moviesOnly.addEventListener('change', () => {
+                if (moviesOnly.checked) {
+                    seriesOnly.checked = false;
+                    filterImdbItems('movie');
+                } else {
+                    showAllImdbItems();
+                }
+            });
+
+            // Series only filter
+            seriesOnly.addEventListener('change', () => {
+                if (seriesOnly.checked) {
+                    moviesOnly.checked = false;
+                    filterImdbItems('series');
+                } else {
+                    showAllImdbItems();
+                }
+            });
+
+            // Individual checkbox changes
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', updateToggleAllState);
+            });
+        };
+
+        // Filter IMDB items by type
+        const filterImdbItems = (type) => {
+            const rows = document.querySelectorAll('#imdbItemsList tr');
+            rows.forEach((row, index) => {
+                const item = fetchedImdbData[index];
+                const checkbox = row.querySelector('.imdb-item-checkbox');
+
+                if (item.type === type) {
+                    row.style.display = '';
+                    checkbox.checked = true;
+                } else {
+                    row.style.display = 'none';
+                    checkbox.checked = false;
+                }
+            });
+        };
+
+        // Show all IMDB items
+        const showAllImdbItems = () => {
+            const rows = document.querySelectorAll('#imdbItemsList tr');
+            const checkboxes = document.querySelectorAll('.imdb-item-checkbox');
+
+            rows.forEach(row => row.style.display = '');
+            checkboxes.forEach(cb => cb.checked = true);
+        };
+
+        // Process IMDB import - handle both enriching and importing
+        processImdbBtn.addEventListener('click', async () => {
+            try {
+                if (!fetchedImdbData || fetchedImdbData.length === 0) {
+                    throw new Error('No IMDB data to process');
+                }
+
+                // Check if we're enriching data or importing
+                if (processImdbBtn.textContent === 'Fetch Detailed Info') {
+                    // We're in the enriching step
+                    await enrichImdbData();
+                    return;
+                }
+
+                // We're in the importing step - get selected items
+                console.log('Starting import process...');
+
+                // Wait a moment for DOM to be ready
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                const checkboxes = document.querySelectorAll('.imdb-item-checkbox:checked');
+                console.log(`Found ${checkboxes.length} checked checkboxes`);
+
+                if (checkboxes.length === 0) {
+                    // Try again with a longer delay in case DOM isn't ready
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    const retryCheckboxes = document.querySelectorAll('.imdb-item-checkbox:checked');
+                    console.log(`Retry found ${retryCheckboxes.length} checked checkboxes`);
+
+                    if (retryCheckboxes.length === 0) {
+                        throw new Error('Please select at least one item to import');
+                    }
+                }
+
+                const selectedItems = [];
+                const finalCheckboxes = document.querySelectorAll('.imdb-item-checkbox:checked');
+
+                finalCheckboxes.forEach((checkbox, i) => {
+                    const index = parseInt(checkbox.dataset.index);
+                    console.log(`Processing checkbox ${i}: index=${index}`);
+
+                    if (!isNaN(index) && fetchedImdbData[index]) {
+                        selectedItems.push(fetchedImdbData[index]);
+                        console.log(`Added item: ${fetchedImdbData[index].title}`);
+                    } else {
+                        console.warn(`Invalid index or missing data for checkbox ${i}: index=${index}`);
+                    }
+                });
+
+                console.log(`Final selected items count: ${selectedItems.length}`);
+
+                if (selectedItems.length === 0) {
+                    throw new Error('No valid items were selected for import');
+                }
+
+                console.log(`Importing ${selectedItems.length} selected items`);
+
+                // Disable the button to prevent double-clicks
+                processImdbBtn.disabled = true;
+                processImdbBtn.textContent = 'Importing...';
+
+                // Start batch processing with the selected IMDB data
+                await processBatchContent(selectedItems);
+
+            } catch (error) {
+                console.error('IMDB batch processing error:', error);
+                displayResult('imdbFetchResult', `Error: ${error.message}`, true);
+            } finally {
+                // Re-enable the button
+                processImdbBtn.disabled = false;
+                processImdbBtn.textContent = 'Import Selected Items';
+            }
+        });
+
+        // Reset IMDB import form
+        const resetImdbUpload = () => {
+            fetchedImdbData = null;
+            imdbUrl.value = '';
+            imdbFetchResult.innerHTML = '';
+            imdbListPreview.style.display = 'none';
+            processImdbBtn.style.display = 'none';
+        };
+
+        // Make reset function globally available
+        window.resetImdbUpload = resetImdbUpload;
+
+        // Make reset function globally available
+        window.resetJsonUpload = resetJsonUpload;
+
+        // Add reset button functionality (we'll add the button in HTML if needed)
+        window.resetBatchUpload = resetBatchUpload;
+
+        // Make selectSearchResult globally available for onclick handlers
+        window.selectSearchResult = selectSearchResult;
+
     </script>
 </body>
 </html>
