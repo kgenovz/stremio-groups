@@ -1283,9 +1283,9 @@
                 ${info.imdbRating ? `<p><strong>IMDB Rating:</strong> ${info.imdbRating}/10</p>` : ''}
             </div>
         </div>
-        <button type="submit" form="addContentForm" class="add-to-group-btn" id="addBtn">
-            ✨ Add "${info.title}" to Group
-        </button>`;
+        <button type="button" class="add-to-group-btn" onclick="addContentToGroup('${info.originalId || info.imdbId}', '${info.title}')">
+    ✨ Add "${info.title}" to Group
+</button>`;
             previewContainer.style.display = 'block';
         };
 
@@ -1320,6 +1320,44 @@
                 if (deleteBtn) {
                     deleteBtn.disabled = false;
                     deleteBtn.textContent = '🗑️ Delete';
+                }
+            }
+        };
+
+        // Function to add content to group from preview
+        const addContentToGroup = async (contentId, title) => {
+            if (!currentGroupId || !currentContentInfo) return;
+
+            const button = document.querySelector('.add-to-group-btn');
+            if (button) {
+                button.disabled = true;
+                button.textContent = 'Adding...';
+            }
+
+            try {
+                const response = await fetch(`/api/groups/${currentGroupId}/content`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contentId: contentId })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error);
+
+                displayResult('addContentResult', data.message, false);
+                loadContent(); // Manually reload for immediate feedback
+
+                // Reset form and hide preview
+                addContentForm.reset();
+                document.getElementById('contentPreview').style.display = 'none';
+                currentContentInfo = null;
+                hideSearchResults();
+
+            } catch (error) {
+                displayResult('addContentResult', `Error: ${error.message}`, true);
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = `✨ Add "${title}" to Group`;
                 }
             }
         };
@@ -2967,6 +3005,9 @@
 
         // Make selectSearchResult globally available for onclick handlers
         window.selectSearchResult = selectSearchResult;
+
+        // Make addContentToGroup globally available for onclick handlers
+        window.addContentToGroup = addContentToGroup;
 
     </script>
 </body>
